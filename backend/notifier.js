@@ -131,7 +131,7 @@ export function startNotifier() {
   checkForUpdates().catch(console.error);
 
   // Then schedule recurring checks
-  cron.schedule("0 0,6,12,18 * * *", () => {
+  cron.schedule("* * * * *", () => {
     checkForUpdates().catch(console.error);
   });
 }
