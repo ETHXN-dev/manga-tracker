@@ -21,7 +21,6 @@ import { getAllTracked, updateProgress } from "./db.js";
 import { getLatestChapter } from "./anilist.js";
 
 // ─── Email via Resend (works on Render free tier — uses HTTPS not SMTP) ───────
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendNotification(updates) {
   if (!process.env.RESEND_API_KEY || !process.env.NOTIFY_EMAIL) {
@@ -29,6 +28,7 @@ async function sendNotification(updates) {
     return;
   }
 
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const rows = updates
     .map(
       ({ title, oldChapter, newChapter, readUrl }) =>
