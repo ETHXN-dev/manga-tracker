@@ -549,10 +549,22 @@ export default function App() {
             <div className="logo-divider" />
             <span className="logo-text">LOG</span>
           </div>
-          <p className="header-sub">
-            <strong>Your manga shelf</strong>
-            Track every chapter. Miss nothing.
-          </p>
+          <div className="header-right">
+            <p className="header-sub">
+              <strong>Your manga shelf</strong>
+              Track every chapter. Miss nothing.
+            </p>
+            {!listLoading && (
+              <div className="header-stats">
+                <span className="header-stat reading">
+                  {reading.length} Reading
+                </span>
+                <span className="header-stat done">
+                  {completed.length} Completed
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

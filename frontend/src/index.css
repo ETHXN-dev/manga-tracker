@@ -32,6 +32,28 @@
   padding: 0;
 }
 
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tileIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 body {
   font-family: var(--font-body);
   background: var(--bg);
@@ -59,108 +81,219 @@ a {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  animation: fadeUp 0.35s ease both;
 }
 
 /* ─── Header ─────────────────────────────────────────────────────────────────── */
+/* ─── Header ─────────────────────────────────────────────────────────────────── */
+@keyframes logoFlicker {
+  0%,
+  95%,
+  100% {
+    opacity: 1;
+    text-shadow:
+      0 0 30px var(--accent-glow),
+      0 0 60px var(--accent-glow);
+  }
+  96% {
+    opacity: 0.85;
+    text-shadow: none;
+  }
+  97% {
+    opacity: 1;
+    text-shadow: 0 0 30px var(--accent-glow);
+  }
+  98% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes borderPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
 .header {
   position: relative;
   padding: 0;
   border-bottom: 1px solid var(--border);
   overflow: hidden;
-  background: linear-gradient(135deg, #0d0d10 0%, #100b0b 100%);
+  background: #080809;
 }
 
-/* Diagonal red streak across the header */
+/* Halftone-dot pattern background — manga panel feel */
 .header::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: -10%;
-  width: 55%;
-  height: 100%;
-  background: linear-gradient(
-    105deg,
-    rgba(230, 57, 70, 0.08) 0%,
-    transparent 70%
+  inset: 0;
+  background-image: radial-gradient(
+    circle,
+    rgba(230, 57, 70, 0.06) 1px,
+    transparent 1px
   );
+  background-size: 20px 20px;
   pointer-events: none;
 }
 
-/* Thin red accent line on the left edge */
+/* Moving scanline — subtle CRT/screen effect */
 .header::after {
   content: "";
   position: absolute;
   left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(to bottom, var(--accent), transparent);
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(230, 57, 70, 0.15),
+    transparent
+  );
+  animation: scanline 4s linear infinite;
+  pointer-events: none;
 }
 
 .header-inner {
   max-width: 1100px;
   margin: 0 auto;
   position: relative;
-  padding: 1.5rem 2rem;
+  padding: 1.75rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
+/* Left side: logo block */
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0;
+  position: relative;
+}
+
+/* Red corner bracket — top left */
+.logo::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: -12px;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  opacity: 0.7;
+}
+
+/* Red corner bracket — bottom right */
+.logo::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  right: -12px;
+  width: 12px;
+  height: 12px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  opacity: 0.7;
 }
 
 .logo-icon {
   font-family: var(--font-display);
-  font-size: 2.6rem;
+  font-size: 3rem;
   color: var(--accent);
   letter-spacing: 0.04em;
   line-height: 1;
-  text-shadow:
-    0 0 30px var(--accent-glow),
-    0 2px 0 rgba(0, 0, 0, 0.5);
+  animation: logoFlicker 8s infinite;
 }
 
 .logo-divider {
   width: 2px;
-  height: 28px;
-  background: var(--border-mid);
-  margin: 0 0.5rem;
+  height: 32px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--accent),
+    transparent
+  );
+  margin: 0 0.6rem;
   align-self: center;
+  animation: borderPulse 3s ease-in-out infinite;
 }
 
 .logo-text {
   font-family: var(--font-display);
-  font-size: 2.6rem;
+  font-size: 3rem;
   letter-spacing: 0.08em;
   color: var(--text);
   line-height: 1;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Right side: tagline block */
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
 }
 
 .header-sub {
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-align: right;
-  line-height: 1.6;
-  border-left: 1px solid var(--border-mid);
-  padding-left: 1.25rem;
+  line-height: 1.5;
 }
 
 .header-sub strong {
   display: block;
   color: var(--text-sub);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: none;
+  margin-bottom: 0.1rem;
+}
+
+/* Small stat pills — "X reading · Y completed" */
+.header-stats {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.header-stat {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.2em 0.6em;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.header-stat.reading {
+  border-color: rgba(230, 57, 70, 0.3);
+  color: var(--accent);
+}
+.header-stat.done {
+  border-color: var(--border-mid);
+  color: var(--text-muted);
 }
 
 /* ─── Main ───────────────────────────────────────────────────────────────────── */
@@ -177,31 +310,54 @@ a {
   display: flex;
   border-bottom: 1px solid var(--border);
   margin-bottom: 1.75rem;
+  gap: 0.25rem;
 }
 
 .tab {
-  padding: 0.7rem 1.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--text-muted);
   border-bottom: 2px solid transparent;
   transition:
-    color 0.2s,
-    border-color 0.2s;
+    color 0.18s,
+    border-color 0.18s,
+    background 0.18s;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: -1px;
+  border-radius: 4px 4px 0 0;
+  position: relative;
 }
 
 .tab:hover {
   color: var(--text-sub);
+  background: rgba(255, 255, 255, 0.02);
 }
+
 .tab.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
+  background: rgba(230, 57, 70, 0.04);
+}
+
+/* Glowing dot on active tab */
+.tab.active::before {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 2px;
+  background: var(--accent);
+  box-shadow:
+    0 0 8px var(--accent-glow),
+    0 0 16px var(--accent-glow);
+  border-radius: 2px;
 }
 
 .tab-count {
@@ -427,10 +583,10 @@ a {
   border-radius: var(--radius);
   overflow: hidden;
   transition:
-    border-color 0.2s,
-    transform 0.2s,
-    box-shadow 0.2s;
-  animation: fadeIn 0.25s ease both;
+    border-color 0.22s,
+    transform 0.22s,
+    box-shadow 0.22s;
+  animation: tileIn 0.35s ease both;
   cursor: default;
 }
 
@@ -447,8 +603,15 @@ a {
 
 .manga-tile:hover {
   border-color: var(--border-mid);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-card);
+  transform: translateY(-4px);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.6),
+    0 0 0 1px var(--border-mid);
+}
+
+.manga-tile:hover .tile-cover img {
+  transform: scale(1.04) translateY(-1%);
+  filter: brightness(1.06);
 }
 
 /* Cover takes up most of the tile — like a real manga spine */
@@ -1119,4 +1282,49 @@ a {
 .is-completed .status-toggle-btn:hover:not(:disabled) {
   background: rgba(230, 57, 70, 0.08);
   border-color: rgba(230, 57, 70, 0.4);
+}
+
+/* ─── Staggered tile entry — each tile pops in slightly after the previous ───── */
+.tracked-grid > *:nth-child(1) {
+  animation-delay: 0s;
+}
+.tracked-grid > *:nth-child(2) {
+  animation-delay: 0.04s;
+}
+.tracked-grid > *:nth-child(3) {
+  animation-delay: 0.08s;
+}
+.tracked-grid > *:nth-child(4) {
+  animation-delay: 0.12s;
+}
+.tracked-grid > *:nth-child(5) {
+  animation-delay: 0.16s;
+}
+.tracked-grid > *:nth-child(6) {
+  animation-delay: 0.2s;
+}
+.tracked-grid > *:nth-child(7) {
+  animation-delay: 0.24s;
+}
+.tracked-grid > *:nth-child(8) {
+  animation-delay: 0.28s;
+}
+.tracked-grid > *:nth-child(9) {
+  animation-delay: 0.32s;
+}
+.tracked-grid > *:nth-child(10) {
+  animation-delay: 0.36s;
+}
+.tracked-grid > *:nth-child(11) {
+  animation-delay: 0.4s;
+}
+.tracked-grid > *:nth-child(12) {
+  animation-delay: 0.44s;
+}
+
+/* Red glow strip at very bottom of header — separates it from content */
+.header {
+  box-shadow:
+    0 1px 0 rgba(230, 57, 70, 0.15),
+    0 4px 20px rgba(0, 0, 0, 0.4);
 }
