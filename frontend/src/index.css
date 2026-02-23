@@ -1574,3 +1574,14 @@ a {
     padding: 0.4rem 0.75rem;
   }
 }
+
+/* ─── Kanji Background ───────────────────────────────────────────────────────── */
+/* Ensure header and main content sit above the canvas */
+.header {
+  position: relative;
+  z-index: 2;
+}
+.main {
+  position: relative;
+  z-index: 2;
+}

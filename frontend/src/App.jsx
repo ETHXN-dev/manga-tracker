@@ -75,6 +75,101 @@ async function fetchAllLatestChapters(mangaList) {
   return map;
 }
 
+// ─── Kanji Background ─────────────────────────────────────────────────────────
+// Floating manga kanji drift upward like embers — purely decorative
+const KANJI = [
+  "漫",
+  "画",
+  "章",
+  "新",
+  "読",
+  "本",
+  "物",
+  "語",
+  "力",
+  "夢",
+  "剣",
+  "闘",
+  "血",
+  "炎",
+  "龍",
+];
+
+function KanjiBackground() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    let raf;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    // Each particle: a kanji character drifting upward
+    const particles = Array.from({ length: 28 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      char: KANJI[Math.floor(Math.random() * KANJI.length)],
+      size: Math.random() * 18 + 10, // 10–28px
+      speed: Math.random() * 0.4 + 0.15, // drift speed
+      opacity: Math.random() * 0.045 + 0.01, // very subtle: 1–5.5%
+      drift: (Math.random() - 0.5) * 0.3, // slight horizontal sway
+      wobble: Math.random() * Math.PI * 2, // phase offset for sway
+    }));
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p) => {
+        // Sway left/right gently
+        p.wobble += 0.008;
+        p.x += Math.sin(p.wobble) * p.drift;
+        p.y -= p.speed;
+
+        // Reset when drifted off top
+        if (p.y < -40) {
+          p.y = canvas.height + 20;
+          p.x = Math.random() * canvas.width;
+          p.char = KANJI[Math.floor(Math.random() * KANJI.length)];
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = "#e63946";
+        ctx.font = `${p.size}px serif`;
+        ctx.fillText(p.char, p.x, p.y);
+        ctx.restore();
+      });
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
+
 // ─── Chapter Dropdown ─────────────────────────────────────────────────────────
 function ChapterDropdown({ latestChapter, readUrl, mangaboltSlug }) {
   const [open, setOpen] = useState(false);
@@ -596,7 +691,8 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    <div className="app" style={{ position: "relative", zIndex: 1 }}>
+      <KanjiBackground />
       <header className="header">
         <div className="header-inner">
           <div className="logo">
