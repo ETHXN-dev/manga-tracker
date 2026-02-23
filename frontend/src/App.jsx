@@ -392,6 +392,38 @@ function MangaTile({
   );
 }
 
+// ─── List Filter Bar ──────────────────────────────────────────────────────────
+function ListFilterBar({ query, onChange }) {
+  return (
+    <div className="list-filter-bar">
+      <div className="list-filter-wrap">
+        <svg
+          className="list-filter-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <input
+          type="text"
+          className="list-filter-input"
+          placeholder="Filter your list..."
+          value={query}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {query && (
+          <button className="list-filter-clear" onClick={() => onChange("")}>
+            ✕
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ message, onSwitchToSearch }) {
   return (
@@ -424,6 +456,7 @@ export default function App() {
   const [cachedCount, setCachedCount] = useState(() =>
     parseInt(localStorage.getItem("mangalog_count") || "6"),
   );
+  const [listQuery, setListQuery] = useState("");
 
   const debouncedQuery = useDebounce(query, 500);
 
@@ -499,44 +532,66 @@ export default function App() {
   };
 
   const trackedIds = new Set(trackedManga.map((m) => m.id));
-  const reading = trackedManga.filter((m) => m.readingStatus !== "completed");
-  const completed = trackedManga.filter((m) => m.readingStatus === "completed");
+  const filterByQuery = (list) =>
+    !listQuery.trim()
+      ? list
+      : list.filter((m) =>
+          m.title.toLowerCase().includes(listQuery.toLowerCase().trim()),
+        );
+  const reading = filterByQuery(
+    trackedManga.filter((m) => m.readingStatus !== "completed"),
+  );
+  const completed = filterByQuery(
+    trackedManga.filter((m) => m.readingStatus === "completed"),
+  );
 
   const renderGrid = (list, emptyMessage, showAddButton) => {
     if (listLoading) {
       return (
-        <div className="tracked-grid">
-          {Array.from({ length: cachedCount }).map((_, i) => (
-            <TileSkeleton key={i} />
-          ))}
-        </div>
+        <>
+          <ListFilterBar query={listQuery} onChange={setListQuery} />
+          <div className="tracked-grid">
+            {Array.from({ length: cachedCount }).map((_, i) => (
+              <TileSkeleton key={i} />
+            ))}
+          </div>
+        </>
       );
     }
-    if (list.length === 0) {
-      return (
-        <EmptyState
-          message={emptyMessage}
-          onSwitchToSearch={showAddButton ? () => setActiveTab("search") : null}
-        />
-      );
-    }
+
+    const noResults = list.length === 0 && listQuery.trim();
+
     return (
-      <div className="tracked-grid">
-        {list.map((m) =>
-          !chapterMap[m.id] ? (
-            <TileSkeleton key={m.id} />
-          ) : (
-            <MangaTile
-              key={m.id}
-              manga={m}
-              chapter={chapterMap[m.id]}
-              onRemove={handleRemove}
-              onProgressUpdate={handleProgressUpdate}
-              onStatusChange={handleStatusChange}
-            />
-          ),
+      <>
+        <ListFilterBar query={listQuery} onChange={setListQuery} />
+        {noResults ? (
+          <p className="no-results">No manga matching "{listQuery}"</p>
+        ) : list.length === 0 ? (
+          <EmptyState
+            message={emptyMessage}
+            onSwitchToSearch={
+              showAddButton ? () => setActiveTab("search") : null
+            }
+          />
+        ) : (
+          <div className="tracked-grid">
+            {list.map((m) =>
+              !chapterMap[m.id] ? (
+                <TileSkeleton key={m.id} />
+              ) : (
+                <MangaTile
+                  key={m.id}
+                  manga={m}
+                  chapter={chapterMap[m.id]}
+                  onRemove={handleRemove}
+                  onProgressUpdate={handleProgressUpdate}
+                  onStatusChange={handleStatusChange}
+                />
+              ),
+            )}
+          </div>
         )}
-      </div>
+      </>
     );
   };
 

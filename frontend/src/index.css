@@ -1328,3 +1328,66 @@ a {
     0 1px 0 rgba(230, 57, 70, 0.15),
     0 4px 20px rgba(0, 0, 0, 0.4);
 }
+
+/* ─── List Filter Bar ────────────────────────────────────────────────────────── */
+.list-filter-bar {
+  margin-bottom: 1.25rem;
+}
+
+.list-filter-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 320px;
+}
+
+.list-filter-icon {
+  position: absolute;
+  left: 0.75rem;
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.list-filter-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 2rem 0.5rem 2.25rem;
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+  color: var(--text);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  outline: none;
+}
+
+.list-filter-input::placeholder {
+  color: var(--text-muted);
+}
+
+.list-filter-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.list-filter-clear {
+  position: absolute;
+  right: 0.6rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding: 0.2rem 0.3rem;
+  border-radius: 3px;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.list-filter-clear:hover {
+  color: var(--text);
+  background: var(--surface-3);
+}
