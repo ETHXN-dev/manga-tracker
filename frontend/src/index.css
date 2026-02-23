@@ -1585,3 +1585,9 @@ a {
   position: relative;
   z-index: 2;
 }
+
+/* Prevent canvas from causing horizontal scroll */
+html,
+body {
+  overflow-x: hidden;
+}
