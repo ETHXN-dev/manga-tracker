@@ -21,6 +21,17 @@ app.use((req, _res, next) => {
   next();
 });
 
+// Temporary test route — remove after testing
+app.get("/api/test-notifier", async (_req, res) => {
+  try {
+    const { checkForUpdates } = await import("./notifier.js");
+    await checkForUpdates();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/manga/search?q=blue+lock
 app.get("/api/manga/search", async (req, res) => {
   const { q } = req.query;

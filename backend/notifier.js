@@ -74,7 +74,7 @@ async function sendNotification(updates) {
 // Compares the latest chapter from the API against what's stored in the DB.
 // We reuse the `currentChapter` field as "last known chapter" for notifications.
 // (It doubles as both reading progress AND notification baseline.)
-async function checkForUpdates() {
+export async function checkForUpdates() {
   console.log("[notifier] Checking for new chapters…");
   const mangaList = await getAllTracked();
   const updates = [];
