@@ -1593,53 +1593,46 @@ body {
 }
 
 /* ─── Speed Lines on Tile Hover ─────────────────────────────────────────────── */
-.tile-cover {
+/* Speed lines are on the tile itself, strictly behind the cover — no layout impact */
+.manga-tile {
   position: relative;
+}
+
+.manga-tile::before {
+  content: "";
+  position: absolute;
+  /* Constrain exactly to the cover area — top of tile, full width, cover height only */
+  top: 0;
+  left: 0;
+  right: 0;
+  /* padding-top on .tile-cover is 110% of width — match it */
+  padding-top: 110%;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    transparent 7deg,
+    rgba(230, 57, 70, 0.2) 7.5deg,
+    transparent 8deg
+  );
+  opacity: 0;
+  transform: scale(0.7) rotate(0deg);
+  transition:
+    opacity 0.2s ease,
+    transform 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
   overflow: hidden;
 }
 
-/* Speed lines live as a pseudo element behind the cover image */
-.tile-cover::before {
-  content: "";
-  position: absolute;
-  inset: -50%;
-  width: 200%;
-  height: 200%;
-  background: repeating-conic-gradient(
-    from 0deg at 50% 50%,
-    rgba(230, 57, 70, 0) 0deg,
-    rgba(230, 57, 70, 0) 8deg,
-    rgba(230, 57, 70, 0.18) 8.5deg,
-    rgba(230, 57, 70, 0) 9deg
-  );
-  opacity: 0;
-  transform: scale(0.6) rotate(0deg);
-  transition:
-    opacity 0.15s ease,
-    transform 0.25s ease;
-  pointer-events: none;
-  z-index: 1;
-  border-radius: 0;
-}
-
-/* Cover image sits above the speed lines */
-.tile-cover img,
-.tile-cover-placeholder {
+/* Tile cover sits above the lines */
+.tile-cover {
   position: relative;
-  z-index: 2;
+  z-index: 1;
+  overflow: hidden;
 }
 
-/* Status dot, badges, delete btn sit above speed lines too */
-.tile-status-dot,
-.tile-unread-badge,
-.tile-completed-badge,
-.tile-delete-btn,
-.tile-confirm-overlay {
-  z-index: 3;
-}
-
-/* Trigger on tile hover — lines burst out then fade */
-.manga-tile:hover .tile-cover::before {
+/* Trigger on hover */
+.manga-tile:hover::before {
   opacity: 1;
-  transform: scale(1.4) rotate(15deg);
+  transform: scale(1.5) rotate(12deg);
 }
