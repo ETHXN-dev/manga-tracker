@@ -16,26 +16,20 @@
 //   3. Create a new app password → copy the 16-character code into .env
 
 import cron from "node-cron";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { getAllTracked, updateProgress } from "./db.js";
 import { getLatestChapter } from "./anilist.js";
 
-// ─── Email transport ──────────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+// ─── Email via Resend (works on Render free tier — uses HTTPS not SMTP) ───────
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendNotification(updates) {
-  if (!process.env.NOTIFY_EMAIL || !process.env.GMAIL_USER) {
+  if (!process.env.RESEND_API_KEY || !process.env.NOTIFY_EMAIL) {
     console.log("[notifier] Email not configured — skipping send");
     return;
   }
 
-  const lines = updates
+  const rows = updates
     .map(
       ({ title, oldChapter, newChapter, readUrl }) =>
         `<tr>
@@ -47,8 +41,8 @@ async function sendNotification(updates) {
     )
     .join("");
 
-  await transporter.sendMail({
-    from: `"MangaLog" <${process.env.GMAIL_USER}>`,
+  await resend.emails.send({
+    from: "MangaLog <onboarding@resend.dev>",
     to: process.env.NOTIFY_EMAIL,
     subject: `📚 ${updates.length} new chapter${updates.length > 1 ? "s" : ""} — MangaLog`,
     html: `
@@ -66,7 +60,7 @@ async function sendNotification(updates) {
               <th style="padding:8px 12px;text-align:left;color:#6b6a75;font-size:12px;text-transform:uppercase;letter-spacing:.08em">Link</th>
             </tr>
           </thead>
-          <tbody>${lines}</tbody>
+          <tbody>${rows}</tbody>
         </table>
         <p style="color:#6b6a75;font-size:12px;margin:24px 0 0">Sent by MangaLog · your manga tracker</p>
       </div>
@@ -137,7 +131,7 @@ export function startNotifier() {
   checkForUpdates().catch(console.error);
 
   // Then schedule recurring checks
-  cron.schedule("* * * * * ", () => {
+  cron.schedule("0 0,6,12,18 * * *", () => {
     checkForUpdates().catch(console.error);
   });
 }
