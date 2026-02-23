@@ -369,18 +369,20 @@ function MangaTile({
               </div>
             )}
 
-            {/* Move to completed / back to reading */}
-            <button
-              className="status-toggle-btn"
-              onClick={toggleStatus}
-              disabled={savingStatus}
-            >
-              {savingStatus
-                ? "…"
-                : isCompleted
-                  ? "↩ Move to Reading"
-                  : "✓ Mark Completed"}
-            </button>
+            {/* Only show "Mark Completed" for finished manga, always show "Move to Reading" on completed shelf */}
+            {(isCompleted || manga.status === "finished") && (
+              <button
+                className="status-toggle-btn"
+                onClick={toggleStatus}
+                disabled={savingStatus}
+              >
+                {savingStatus
+                  ? "…"
+                  : isCompleted
+                    ? "↩ Move to Reading"
+                    : "✓ Mark Completed"}
+              </button>
+            )}
           </>
         )}
 
