@@ -302,88 +302,6 @@ function SearchResultCard({ manga, onAdd, isTracked }) {
   );
 }
 
-// ─── Speed Lines ─────────────────────────────────────────────────────────────
-// Canvas-based speed lines that burst out on hover — drawn fresh each frame
-function SpeedLines({ active }) {
-  const canvasRef = useRef(null);
-  const rafRef = useRef(null);
-  const startRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const W = (canvas.width = canvas.offsetWidth);
-    const H = (canvas.height = canvas.offsetHeight);
-    const cx = W / 2;
-    const cy = H / 2;
-    const NUM = 28; // number of lines
-    const DURATION = 350; // ms for full animation
-
-    // Pre-compute line angles and lengths
-    const lines = Array.from({ length: NUM }, (_, i) => ({
-      angle: (i / NUM) * Math.PI * 2,
-      len: Math.random() * 0.25 + 0.55, // 55–80% of max radius
-      width: Math.random() * 2.5 + 1,
-      gap: Math.random() * 0.08 + 0.12, // gap from center
-    }));
-
-    const maxR = Math.sqrt(cx * cx + cy * cy) * 1.1;
-
-    const draw = (timestamp) => {
-      if (!startRef.current) startRef.current = timestamp;
-      const elapsed = timestamp - startRef.current;
-      const progress = Math.min(elapsed / DURATION, 1);
-
-      // Ease out — fast burst then slow fade
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const alpha =
-        progress < 0.4
-          ? progress / 0.4 // fade in quickly
-          : 1 - (progress - 0.4) / 0.6; // fade out slowly
-
-      ctx.clearRect(0, 0, W, H);
-
-      lines.forEach((line) => {
-        const innerR = maxR * line.gap * eased;
-        const outerR = maxR * line.len * eased;
-
-        const x1 = cx + Math.cos(line.angle) * innerR;
-        const y1 = cy + Math.sin(line.angle) * innerR;
-        const x2 = cx + Math.cos(line.angle) * outerR;
-        const y2 = cy + Math.sin(line.angle) * outerR;
-
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `rgba(230, 57, 70, ${alpha * 0.85})`;
-        ctx.lineWidth = line.width;
-        ctx.lineCap = "round";
-        ctx.stroke();
-      });
-
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(draw);
-      } else {
-        ctx.clearRect(0, 0, W, H);
-      }
-    };
-
-    if (active) {
-      cancelAnimationFrame(rafRef.current);
-      startRef.current = null;
-      ctx.clearRect(0, 0, W, H);
-      rafRef.current = requestAnimationFrame(draw);
-    } else {
-      cancelAnimationFrame(rafRef.current);
-      ctx.clearRect(0, 0, W, H);
-    }
-
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [active]);
-
-  return <canvas ref={canvasRef} className="tile-speed-canvas" />;
-}
-
 // ─── Tile Skeleton ────────────────────────────────────────────────────────────
 function TileSkeleton() {
   return (
@@ -413,7 +331,6 @@ function MangaTile({
   const [currentCh, setCurrentCh] = useState(manga.currentChapter || 0);
   const [savingProgress, setSaving] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const isCompleted = manga.readingStatus === "completed";
 
   const latest = chapter ? parseInt(chapter.chapter) : 0;
@@ -452,14 +369,9 @@ function MangaTile({
   return (
     <div
       className={`manga-tile ${hasUnread || isNew ? "has-unread" : ""} ${isCompleted ? "is-completed" : ""}`}
-      onMouseLeave={() => {
-        setConfirming(false);
-        setHovered(false);
-      }}
-      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setConfirming(false)}
     >
       <div className="tile-cover">
-        <SpeedLines active={hovered} />
         {manga.coverUrl ? (
           <img src={manga.coverUrl} alt={manga.title} loading="lazy" />
         ) : (
