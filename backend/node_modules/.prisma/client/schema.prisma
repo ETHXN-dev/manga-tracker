@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./manga.db"
+}
+
+model Manga {
+  id             String   @id
+  title          String
+  coverUrl       String?
+  status         String?
+  year           Int?
+  // Reading progress — which chapter the user is currently on
+  currentChapter Int?     @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

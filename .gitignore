@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Database
+*.db
+*.db-journal
+
+# Environment variables — never commit these
+.env
+
+# Build output
+dist/
+
+# Prisma generated client
+backend/node_modules/.prisma
+
+# OS
+.DS_Store
