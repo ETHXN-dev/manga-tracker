@@ -8,8 +8,9 @@ import {
   removeTracked,
   isTracked,
   updateProgress,
+  updateReadingStatus,
 } from "./db.js";
-import { startNotifier } from "./notifier.js";
+import { startNotifier, checkForUpdates } from "./notifier.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,18 +22,6 @@ app.use((req, _res, next) => {
   next();
 });
 
-// Temporary test route — remove after testing
-app.get("/api/test-notifier", async (_req, res) => {
-  try {
-    const { checkForUpdates } = await import("./notifier.js");
-    await checkForUpdates();
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET /api/manga/search?q=blue+lock
 app.get("/api/manga/search", async (req, res) => {
   const { q } = req.query;
   if (!q?.trim())
@@ -40,32 +29,29 @@ app.get("/api/manga/search", async (req, res) => {
   try {
     res.json({ data: await searchManga(q.trim()) });
   } catch (err) {
-    console.error("Search error:", err);
-    res.status(502).json({ error: "Search failed. Try again." });
+    console.error(err);
+    res.status(502).json({ error: "Search failed." });
   }
 });
 
-// GET /api/manga/:id/latest-chapter
 app.get("/api/manga/:id/latest-chapter", async (req, res) => {
   try {
     res.json({ data: await getLatestChapter(req.params.id) });
   } catch (err) {
-    console.error("Chapter error:", err);
+    console.error(err);
     res.status(502).json({ error: "Could not fetch chapter data." });
   }
 });
 
-// GET /api/tracked
 app.get("/api/tracked", async (_req, res) => {
   try {
     res.json({ data: await getAllTracked() });
   } catch (err) {
-    console.error("DB read error:", err);
+    console.error(err);
     res.status(500).json({ error: "Could not retrieve tracked manga." });
   }
 });
 
-// POST /api/tracked
 app.post("/api/tracked", async (req, res) => {
   const { id, title, coverUrl, status, year } = req.body;
   if (!id || !title)
@@ -77,35 +63,55 @@ app.post("/api/tracked", async (req, res) => {
       .status(201)
       .json({ data: await addTracked({ id, title, coverUrl, status, year }) });
   } catch (err) {
-    console.error("DB write error:", err);
+    console.error(err);
     res.status(500).json({ error: "Could not save manga." });
   }
 });
 
-// DELETE /api/tracked/:id
 app.delete("/api/tracked/:id", async (req, res) => {
   try {
     await removeTracked(req.params.id);
     res.status(204).send();
   } catch (err) {
-    console.error("DB delete error:", err);
+    console.error(err);
     res.status(500).json({ error: "Could not remove manga." });
   }
 });
 
-// PATCH /api/tracked/:id/progress
-// Updates which chapter the user is currently on.
-// Body: { currentChapter: 42 }
 app.patch("/api/tracked/:id/progress", async (req, res) => {
   const { currentChapter } = req.body;
   if (currentChapter === undefined)
     return res.status(400).json({ error: "currentChapter required" });
   try {
-    const updated = await updateProgress(req.params.id, currentChapter);
-    res.json({ data: updated });
+    res.json({ data: await updateProgress(req.params.id, currentChapter) });
   } catch (err) {
-    console.error("Progress update error:", err);
+    console.error(err);
     res.status(500).json({ error: "Could not update progress." });
+  }
+});
+
+// PATCH /api/tracked/:id/reading-status
+// Body: { readingStatus: "reading" | "completed" }
+app.patch("/api/tracked/:id/reading-status", async (req, res) => {
+  const { readingStatus } = req.body;
+  if (!["reading", "completed"].includes(readingStatus))
+    return res
+      .status(400)
+      .json({ error: "readingStatus must be 'reading' or 'completed'" });
+  try {
+    res.json({ data: await updateReadingStatus(req.params.id, readingStatus) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not update reading status." });
+  }
+});
+
+app.get("/api/test-notifier", async (_req, res) => {
+  try {
+    await checkForUpdates();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -113,19 +119,12 @@ app.use((req, res) =>
   res.status(404).json({ error: `${req.method} ${req.path} not found` }),
 );
 app.use((err, _req, res, _next) => {
-  console.error("Unhandled:", err);
+  console.error(err);
   res.status(500).json({ error: "Something went wrong." });
 });
 
 app.listen(PORT, () => {
-  console.log(`\n🚀 Server running on http://localhost:${PORT}`);
-  console.log(`   GET   /api/manga/search?q=...`);
-  console.log(`   GET   /api/manga/:id/latest-chapter`);
-  console.log(`   GET   /api/tracked`);
-  console.log(`   POST  /api/tracked`);
-  console.log(`   PATCH /api/tracked/:id/progress`);
-  console.log(`   DELETE /api/tracked/:id\n`);
+  console.log(`\n🚀 Server running on http://localhost:${PORT}\n`);
 });
 
-// Start the chapter update notifier (runs every 6 hours)
 startNotifier();

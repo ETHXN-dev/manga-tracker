@@ -13,8 +13,8 @@ model Manga {
   coverUrl       String?
   status         String?
   year           Int?
-  // Reading progress — which chapter the user is currently on
   currentChapter Int?     @default(0)
+  readingStatus  String   @default("reading") // "reading" | "completed"
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }

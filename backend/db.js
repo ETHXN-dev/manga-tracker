@@ -8,7 +8,15 @@ export async function getAllTracked() {
 
 export async function addTracked({ id, title, coverUrl, status, year }) {
   return prisma.manga.create({
-    data: { id, title, coverUrl, status, year, currentChapter: 0 },
+    data: {
+      id,
+      title,
+      coverUrl,
+      status,
+      year,
+      currentChapter: 0,
+      readingStatus: "reading",
+    },
   });
 }
 
@@ -21,11 +29,17 @@ export async function isTracked(id) {
   return !!manga;
 }
 
-// Update which chapter the user is currently reading
 export async function updateProgress(id, currentChapter) {
   return prisma.manga.update({
     where: { id },
     data: { currentChapter: parseInt(currentChapter) },
+  });
+}
+
+export async function updateReadingStatus(id, readingStatus) {
+  return prisma.manga.update({
+    where: { id },
+    data: { readingStatus },
   });
 }
 

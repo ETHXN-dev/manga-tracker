@@ -1051,3 +1051,72 @@ a {
   height: 0.65rem;
   width: 35%;
 }
+
+/* ─── Completed Shelf ────────────────────────────────────────────────────────── */
+.manga-tile.is-completed {
+  opacity: 0.65;
+  filter: saturate(0.4);
+  transition:
+    opacity 0.2s,
+    filter 0.2s;
+}
+
+.manga-tile.is-completed:hover {
+  opacity: 0.9;
+  filter: saturate(0.7);
+}
+
+.tile-completed-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+/* Status toggle button — sits below progress row */
+.status-toggle-btn {
+  margin-top: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.3em 0.6em;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+  width: fit-content;
+}
+
+.status-toggle-btn:hover:not(:disabled) {
+  color: var(--text-sub);
+  border-color: var(--border-mid);
+  background: var(--surface-2);
+}
+
+.status-toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.is-completed .status-toggle-btn {
+  color: var(--accent);
+  border-color: rgba(230, 57, 70, 0.2);
+}
+
+.is-completed .status-toggle-btn:hover:not(:disabled) {
+  background: rgba(230, 57, 70, 0.08);
+  border-color: rgba(230, 57, 70, 0.4);
+}

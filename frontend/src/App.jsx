@@ -55,8 +55,15 @@ async function updateProgressApi(id, currentChapter) {
   });
   if (!res.ok) throw new Error("Could not update progress");
 }
+async function updateReadingStatusApi(id, readingStatus) {
+  const res = await fetch(`${API_BASE}/tracked/${id}/reading-status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ readingStatus }),
+  });
+  if (!res.ok) throw new Error("Could not update status");
+}
 
-// Fires all chapter requests at once — O(1) instead of O(n) wait time
 async function fetchAllLatestChapters(mangaList) {
   const results = await Promise.allSettled(
     mangaList.map((m) => getLatestChapter(m.id)),
@@ -201,8 +208,6 @@ function SearchResultCard({ manga, onAdd, isTracked }) {
 }
 
 // ─── Tile Skeleton ────────────────────────────────────────────────────────────
-// Shown while chapter data loads — mirrors the real tile shape exactly
-// so the layout doesn't jump when data arrives.
 function TileSkeleton() {
   return (
     <div className="tile-skeleton">
@@ -223,18 +228,20 @@ function TileSkeleton() {
 function MangaTile({
   manga,
   chapter,
-  chapterLoading,
   onRemove,
   onProgressUpdate,
+  onStatusChange,
 }) {
   const [confirming, setConfirming] = useState(false);
   const [currentCh, setCurrentCh] = useState(manga.currentChapter || 0);
   const [savingProgress, setSaving] = useState(false);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const isCompleted = manga.readingStatus === "completed";
 
   const latest = chapter ? parseInt(chapter.chapter) : 0;
   const hasUnread =
-    !chapterLoading && !isNaN(latest) && latest > currentCh && currentCh > 0;
-  const isNew = !chapterLoading && currentCh === 0 && latest > 0;
+    !isCompleted && !isNaN(latest) && latest > currentCh && currentCh > 0;
+  const isNew = !isCompleted && currentCh === 0 && latest > 0;
 
   const markAsRead = async () => {
     if (!chapter || savingProgress) return;
@@ -250,9 +257,23 @@ function MangaTile({
     }
   };
 
+  const toggleStatus = async () => {
+    if (savingStatus) return;
+    setSavingStatus(true);
+    const newStatus = isCompleted ? "reading" : "completed";
+    try {
+      await updateReadingStatusApi(manga.id, newStatus);
+      onStatusChange(manga.id, newStatus);
+    } catch {
+      /* silent */
+    } finally {
+      setSavingStatus(false);
+    }
+  };
+
   return (
     <div
-      className={`manga-tile ${hasUnread || isNew ? "has-unread" : ""}`}
+      className={`manga-tile ${hasUnread || isNew ? "has-unread" : ""} ${isCompleted ? "is-completed" : ""}`}
       onMouseLeave={() => setConfirming(false)}
     >
       <div className="tile-cover">
@@ -262,10 +283,10 @@ function MangaTile({
           <div className="tile-cover-placeholder">📖</div>
         )}
         <div className="tile-status-dot" data-status={manga.status} />
-
         {hasUnread && (
           <div className="tile-unread-badge">+{latest - currentCh}</div>
         )}
+        {isCompleted && <div className="tile-completed-badge">✓</div>}
 
         {!confirming && (
           <button
@@ -320,56 +341,69 @@ function MangaTile({
       <div className="tile-info">
         <p className="tile-title">{manga.title}</p>
 
-        {chapterLoading && (
-          <span className="tile-chapter-loading">Loading…</span>
-        )}
+        {!chapter && <span className="tile-chapter-loading">Loading…</span>}
 
-        {!chapterLoading && chapter && (
+        {chapter && (
           <>
             <ChapterDropdown
               latestChapter={chapter.chapter}
               readUrl={chapter.readUrl}
               mangaboltSlug={chapter.mangaboltSlug}
             />
-            <div className="progress-row">
-              {currentCh > 0 && (
-                <span className="progress-label">
-                  {hasUnread ? `On ch. ${currentCh}` : "Up to date ✓"}
-                </span>
-              )}
-              {(hasUnread || isNew) && (
-                <button
-                  className="mark-read-btn"
-                  onClick={markAsRead}
-                  disabled={savingProgress}
-                >
-                  {savingProgress ? "Saving…" : `Mark ch. ${latest} read`}
-                </button>
-              )}
-            </div>
+            {!isCompleted && (
+              <div className="progress-row">
+                {currentCh > 0 && (
+                  <span className="progress-label">
+                    {hasUnread ? `On ch. ${currentCh}` : "Up to date ✓"}
+                  </span>
+                )}
+                {(hasUnread || isNew) && (
+                  <button
+                    className="mark-read-btn"
+                    onClick={markAsRead}
+                    disabled={savingProgress}
+                  >
+                    {savingProgress ? "Saving…" : `Mark ch. ${latest} read`}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Move to completed / back to reading */}
+            <button
+              className="status-toggle-btn"
+              onClick={toggleStatus}
+              disabled={savingStatus}
+            >
+              {savingStatus
+                ? "…"
+                : isCompleted
+                  ? "↩ Move to Reading"
+                  : "✓ Mark Completed"}
+            </button>
           </>
         )}
 
-        {!chapterLoading && !chapter && (
-          <span className="tile-chapter-error">No data</span>
-        )}
+        {!chapter && <span className="tile-chapter-error">No data</span>}
       </div>
     </div>
   );
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
-function EmptyState({ onSwitchToSearch }) {
+function EmptyState({ message, onSwitchToSearch }) {
   return (
     <div className="empty-state">
       <div className="empty-icon">📚</div>
-      <p>Your list is empty.</p>
-      <p className="empty-sub">
-        <button className="empty-cta" onClick={onSwitchToSearch}>
-          Add a manga
-        </button>{" "}
-        to start tracking.
-      </p>
+      <p>{message || "Nothing here yet."}</p>
+      {onSwitchToSearch && (
+        <p className="empty-sub">
+          <button className="empty-cta" onClick={onSwitchToSearch}>
+            Add a manga
+          </button>{" "}
+          to start tracking.
+        </p>
+      )}
     </div>
   );
 }
@@ -380,13 +414,11 @@ export default function App() {
   const [searchResults, setResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
-  const [activeTab, setActiveTab] = useState("list");
+  const [activeTab, setActiveTab] = useState("reading");
   const [trackedManga, setTracked] = useState([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState(null);
   const [chapterMap, setChapterMap] = useState({});
-  const [chaptersLoading, setChaptersLoading] = useState(true);
-  // Cached count from last visit so skeletons match actual manga count on load
   const [cachedCount, setCachedCount] = useState(() =>
     parseInt(localStorage.getItem("mangalog_count") || "6"),
   );
@@ -399,10 +431,8 @@ export default function App() {
         setTracked(list);
         setCachedCount(list.length);
         localStorage.setItem("mangalog_count", String(list.length));
-        setChaptersLoading(true);
         const map = await fetchAllLatestChapters(list);
         setChapterMap(map);
-        setChaptersLoading(false);
       })
       .catch((e) => setListError(e.message))
       .finally(() => setListLoading(false));
@@ -432,12 +462,11 @@ export default function App() {
   const handleAdd = async (manga) => {
     try {
       await addTrackedApi(manga);
-      setTracked((p) => [manga, ...p]);
-      setActiveTab("list");
+      setTracked((p) => [{ ...manga, readingStatus: "reading" }, ...p]);
+      setActiveTab("reading");
       getLatestChapter(manga.id).then(async (ch) => {
         if (ch) {
           setChapterMap((prev) => ({ ...prev, [manga.id]: ch }));
-          // Set baseline so notifier only alerts for chapters AFTER you added it
           await updateProgressApi(manga.id, ch.chapter);
         }
       });
@@ -461,7 +490,53 @@ export default function App() {
     );
   };
 
+  const handleStatusChange = (id, readingStatus) => {
+    setTracked((p) =>
+      p.map((m) => (m.id === id ? { ...m, readingStatus } : m)),
+    );
+  };
+
   const trackedIds = new Set(trackedManga.map((m) => m.id));
+  const reading = trackedManga.filter((m) => m.readingStatus !== "completed");
+  const completed = trackedManga.filter((m) => m.readingStatus === "completed");
+
+  const renderGrid = (list, emptyMessage, showAddButton) => {
+    if (listLoading) {
+      return (
+        <div className="tracked-grid">
+          {Array.from({ length: cachedCount }).map((_, i) => (
+            <TileSkeleton key={i} />
+          ))}
+        </div>
+      );
+    }
+    if (list.length === 0) {
+      return (
+        <EmptyState
+          message={emptyMessage}
+          onSwitchToSearch={showAddButton ? () => setActiveTab("search") : null}
+        />
+      );
+    }
+    return (
+      <div className="tracked-grid">
+        {list.map((m) =>
+          !chapterMap[m.id] ? (
+            <TileSkeleton key={m.id} />
+          ) : (
+            <MangaTile
+              key={m.id}
+              manga={m}
+              chapter={chapterMap[m.id]}
+              onRemove={handleRemove}
+              onProgressUpdate={handleProgressUpdate}
+              onStatusChange={handleStatusChange}
+            />
+          ),
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="app">
@@ -482,12 +557,21 @@ export default function App() {
       <main className="main">
         <nav className="tabs">
           <button
-            className={`tab ${activeTab === "list" ? "active" : ""}`}
-            onClick={() => setActiveTab("list")}
+            className={`tab ${activeTab === "reading" ? "active" : ""}`}
+            onClick={() => setActiveTab("reading")}
           >
-            My List{" "}
-            {trackedManga.length > 0 && (
-              <span className="tab-count">{trackedManga.length}</span>
+            Reading{" "}
+            {reading.length > 0 && (
+              <span className="tab-count">{reading.length}</span>
+            )}
+          </button>
+          <button
+            className={`tab ${activeTab === "completed" ? "active" : ""}`}
+            onClick={() => setActiveTab("completed")}
+          >
+            Completed{" "}
+            {completed.length > 0 && (
+              <span className="tab-count">{completed.length}</span>
             )}
           </button>
           <button
@@ -497,6 +581,13 @@ export default function App() {
             + Add Manga
           </button>
         </nav>
+
+        {listError && <p className="error-msg">{listError}</p>}
+
+        {activeTab === "reading" &&
+          renderGrid(reading, "You're not reading anything yet.", true)}
+        {activeTab === "completed" &&
+          renderGrid(completed, "No completed manga yet.", false)}
 
         {activeTab === "search" && (
           <section>
@@ -524,43 +615,6 @@ export default function App() {
               !searchError && (
                 <p className="no-results">No results for "{query}"</p>
               )}
-          </section>
-        )}
-
-        {activeTab === "list" && (
-          <section>
-            {listError && <p className="error-msg">{listError}</p>}
-            {!listLoading && !listError && trackedManga.length === 0 && (
-              <EmptyState onSwitchToSearch={() => setActiveTab("search")} />
-            )}
-            {/* Show skeleton grid while the list itself is loading */}
-            {listLoading && (
-              <div className="tracked-grid">
-                {Array.from({ length: cachedCount }).map((_, i) => (
-                  <TileSkeleton key={i} />
-                ))}
-              </div>
-            )}
-
-            {!listLoading && !listError && trackedManga.length > 0 && (
-              <div className="tracked-grid">
-                {trackedManga.map((m) =>
-                  // Show skeleton until this specific manga's chapter data arrives
-                  !chapterMap[m.id] ? (
-                    <TileSkeleton key={m.id} />
-                  ) : (
-                    <MangaTile
-                      key={m.id}
-                      manga={m}
-                      chapter={chapterMap[m.id]}
-                      chapterLoading={false}
-                      onRemove={handleRemove}
-                      onProgressUpdate={handleProgressUpdate}
-                    />
-                  ),
-                )}
-              </div>
-            )}
           </section>
         )}
       </main>
