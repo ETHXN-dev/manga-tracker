@@ -115,9 +115,9 @@ function KanjiBackground() {
       x: Math.random() * window.innerWidth,
       y: Math.random() * window.innerHeight,
       char: KANJI[Math.floor(Math.random() * KANJI.length)],
-      size: Math.random() * 18 + 10, // 10–28px
+      size: Math.random() * 24 + 16, // 16–40px
       speed: Math.random() * 0.4 + 0.15, // drift speed
-      opacity: Math.random() * 0.12 + 0.06, // visible: 6–18%
+      opacity: Math.random() * 0.25 + 0.15, // bold: 15–40%
       drift: (Math.random() - 0.5) * 0.3, // slight horizontal sway
       wobble: Math.random() * Math.PI * 2, // phase offset for sway
     }));
