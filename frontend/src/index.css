@@ -1592,47 +1592,16 @@ body {
   overflow-x: hidden;
 }
 
-/* ─── Speed Lines on Tile Hover ─────────────────────────────────────────────── */
-/* Speed lines are on the tile itself, strictly behind the cover — no layout impact */
-.manga-tile {
-  position: relative;
-}
-
-.manga-tile::before {
-  content: "";
-  position: absolute;
-  /* Constrain exactly to the cover area — top of tile, full width, cover height only */
-  top: 0;
-  left: 0;
-  right: 0;
-  /* padding-top on .tile-cover is 110% of width — match it */
-  padding-top: 110%;
-  background: repeating-conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    transparent 7deg,
-    rgba(230, 57, 70, 0.2) 7.5deg,
-    transparent 8deg
-  );
-  opacity: 0;
-  transform: scale(0.7) rotate(0deg);
-  transition:
-    opacity 0.2s ease,
-    transform 0.3s ease;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-/* Tile cover sits above the lines */
+/* ─── Speed Lines ────────────────────────────────────────────────────────────── */
 .tile-cover {
   position: relative;
-  z-index: 1;
   overflow: hidden;
 }
-
-/* Trigger on hover */
-.manga-tile:hover::before {
-  opacity: 1;
-  transform: scale(1.5) rotate(12deg);
+.tile-speed-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
 }
