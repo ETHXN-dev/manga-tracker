@@ -9,6 +9,8 @@ import {
   isTracked,
   updateProgress,
   updateReadingStatus,
+  updateChapterCache,
+  isCacheFresh,
 } from "./db.js";
 import { startNotifier, checkForUpdates } from "./notifier.js";
 
@@ -34,9 +36,43 @@ app.get("/api/manga/search", async (req, res) => {
   }
 });
 
+// GET /api/manga/:id/latest-chapter
+// Serves from DB cache if fresh (< 6hrs), otherwise fetches from APIs and updates cache
 app.get("/api/manga/:id/latest-chapter", async (req, res) => {
   try {
-    res.json({ data: await getLatestChapter(req.params.id) });
+    const { id } = req.params;
+
+    // Check if we have a fresh cached value in the DB
+    const tracked = await getAllTracked();
+    const manga = tracked.find((m) => m.id === id);
+
+    if (manga && isCacheFresh(manga)) {
+      // Serve from cache — instant response, no API calls
+      console.log(`[cache] HIT for ${manga.title}`);
+      return res.json({
+        data: {
+          chapter: manga.latestChapter,
+          readUrl: manga.latestChapterUrl,
+          mangaboltSlug: manga.mangaboltSlug,
+          fromCache: true,
+        },
+      });
+    }
+
+    // Cache miss — fetch from APIs
+    console.log(`[cache] MISS for ${manga?.title || id} — fetching from API`);
+    const data = await getLatestChapter(id);
+
+    // Write result back to DB cache so next request is instant
+    if (data && manga) {
+      await updateChapterCache(id, {
+        latestChapter: data.chapter,
+        latestChapterUrl: data.readUrl,
+        mangaboltSlug: data.mangaboltSlug,
+      });
+    }
+
+    res.json({ data });
   } catch (err) {
     console.error(err);
     res.status(502).json({ error: "Could not fetch chapter data." });
@@ -90,8 +126,6 @@ app.patch("/api/tracked/:id/progress", async (req, res) => {
   }
 });
 
-// PATCH /api/tracked/:id/reading-status
-// Body: { readingStatus: "reading" | "completed" }
 app.patch("/api/tracked/:id/reading-status", async (req, res) => {
   const { readingStatus } = req.body;
   if (!["reading", "completed"].includes(readingStatus))
@@ -123,8 +157,8 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: "Something went wrong." });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 Server running on http://localhost:${PORT}\n`);
-});
+app.listen(PORT, () =>
+  console.log(`\n🚀 Server running on http://localhost:${PORT}\n`),
+);
 
 startNotifier();

@@ -17,7 +17,7 @@
 
 import cron from "node-cron";
 import { Resend } from "resend";
-import { getAllTracked, updateProgress } from "./db.js";
+import { getAllTracked, updateProgress, updateChapterCache } from "./db.js";
 import { getLatestChapter } from "./anilist.js";
 
 // ─── Email via Resend (works on Render free tier — uses HTTPS not SMTP) ───────
@@ -89,6 +89,13 @@ export async function checkForUpdates() {
 
       const latest = parseInt(data.chapter);
       const current = manga.currentChapter || 0;
+
+      // Always update cache when notifier fetches fresh data
+      await updateChapterCache(manga.id, {
+        latestChapter: latest,
+        latestChapterUrl: data.readUrl,
+        mangaboltSlug: data.mangaboltSlug,
+      }).catch(() => {});
 
       if (!isNaN(latest) && latest > current) {
         return {

@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+const CACHE_TTL_HOURS = 6; // only re-fetch if older than this
+
 export async function getAllTracked() {
   return prisma.manga.findMany({ orderBy: { createdAt: "desc" } });
 }
@@ -41,6 +43,30 @@ export async function updateReadingStatus(id, readingStatus) {
     where: { id },
     data: { readingStatus },
   });
+}
+
+// Write chapter data back to the DB cache
+export async function updateChapterCache(
+  id,
+  { latestChapter, latestChapterUrl, mangaboltSlug },
+) {
+  return prisma.manga.update({
+    where: { id },
+    data: {
+      latestChapter: parseInt(latestChapter),
+      latestChapterUrl,
+      mangaboltSlug,
+      chapterCachedAt: new Date(),
+    },
+  });
+}
+
+// Returns true if cache is fresh enough to use
+export function isCacheFresh(manga) {
+  if (!manga.chapterCachedAt || !manga.latestChapter) return false;
+  const ageHours =
+    (Date.now() - new Date(manga.chapterCachedAt).getTime()) / 1000 / 60 / 60;
+  return ageHours < CACHE_TTL_HOURS;
 }
 
 process.on("beforeExit", async () => {

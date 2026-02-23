@@ -8,13 +8,18 @@ datasource db {
 }
 
 model Manga {
-  id             String   @id
-  title          String
-  coverUrl       String?
-  status         String?
-  year           Int?
-  currentChapter Int?     @default(0)
-  readingStatus  String   @default("reading") // "reading" | "completed"
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String    @id
+  title            String
+  coverUrl         String?
+  status           String?
+  year             Int?
+  currentChapter   Int?      @default(0)
+  readingStatus    String    @default("reading")
+  // Chapter cache — avoids hitting APIs on every page load
+  latestChapter    Int?
+  latestChapterUrl String?
+  mangaboltSlug    String?
+  chapterCachedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
