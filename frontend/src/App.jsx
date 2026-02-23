@@ -191,10 +191,30 @@ function ChapterDropdown({ latestChapter, readUrl, mangaboltSlug }) {
   const chUrl = (num) =>
     `https://mangabolt.com/chapter/${mangaboltSlug}-chapter-${num}/`;
 
+  // Count-up animation
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (isNaN(latest)) return;
+    const duration = 600; // ms
+    const steps = Math.min(latest, 40); // max 40 steps so it's snappy
+    const interval = duration / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += Math.ceil(latest / steps);
+      if (current >= latest) {
+        setDisplay(latest);
+        clearInterval(timer);
+      } else {
+        setDisplay(current);
+      }
+    }, interval);
+    return () => clearInterval(timer);
+  }, [latest]);
+
   return (
     <div className="chapter-dropdown-wrap" ref={ref}>
       <span className="chapter-num">
-        {latestChapter === "?" ? "Ch. ?" : `Ch. ${latestChapter}`}
+        {latestChapter === "?" ? "Ch. ?" : `Ch. ${display}`}
       </span>
       <div className="chapter-row">
         <a
