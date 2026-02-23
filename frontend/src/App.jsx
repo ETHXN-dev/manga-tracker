@@ -434,10 +434,12 @@ export default function App() {
       await addTrackedApi(manga);
       setTracked((p) => [manga, ...p]);
       setActiveTab("list");
-      // Fetch chapter data for the new manga and add it to the map
-      // so the tile doesn't show "No data" immediately
-      getLatestChapter(manga.id).then((ch) => {
-        if (ch) setChapterMap((prev) => ({ ...prev, [manga.id]: ch }));
+      getLatestChapter(manga.id).then(async (ch) => {
+        if (ch) {
+          setChapterMap((prev) => ({ ...prev, [manga.id]: ch }));
+          // Set baseline so notifier only alerts for chapters AFTER you added it
+          await updateProgressApi(manga.id, ch.chapter);
+        }
       });
     } catch (e) {
       alert(e.message);
