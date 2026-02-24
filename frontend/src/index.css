@@ -86,25 +86,88 @@ a {
 
 /* ─── Header ─────────────────────────────────────────────────────────────────── */
 /* ─── Header ─────────────────────────────────────────────────────────────────── */
-@keyframes logoFlicker {
+@keyframes logoGlitch {
   0%,
-  95%,
+  88%,
   100% {
-    opacity: 1;
-    text-shadow:
-      0 0 30px var(--accent-glow),
-      0 0 60px var(--accent-glow);
-  }
-  96% {
-    opacity: 0.85;
-    text-shadow: none;
-  }
-  97% {
-    opacity: 1;
     text-shadow: 0 0 30px var(--accent-glow);
+    clip-path: none;
+    transform: translate(0);
   }
-  98% {
+  /* Glitch burst 1 */
+  89% {
+    text-shadow:
+      -3px 0 rgba(0, 255, 255, 0.8),
+      3px 0 rgba(255, 0, 80, 0.8);
+    transform: translate(-2px, 0) skewX(-2deg);
+    clip-path: inset(0 0 60% 0);
+  }
+  90% {
+    text-shadow:
+      3px 0 rgba(0, 255, 255, 0.8),
+      -3px 0 rgba(255, 0, 80, 0.8);
+    transform: translate(2px, 0) skewX(2deg);
+    clip-path: inset(40% 0 0 0);
+  }
+  91% {
+    text-shadow:
+      -4px 0 rgba(0, 255, 255, 0.6),
+      4px 0 rgba(255, 0, 80, 0.6);
+    transform: translate(-1px, 1px);
+    clip-path: inset(20% 0 30% 0);
+  }
+  92% {
+    text-shadow: none;
+    transform: translate(0);
+    clip-path: none;
+    opacity: 0.7;
+  }
+  /* Glitch burst 2 — quick second hit */
+  93% {
+    text-shadow:
+      5px 0 rgba(0, 255, 255, 0.9),
+      -5px 0 rgba(255, 0, 80, 0.9);
+    transform: translate(3px, -1px) skewX(-3deg);
+    clip-path: inset(50% 0 10% 0);
+    opacity: 1;
+  }
+  94% {
+    text-shadow:
+      -2px 0 rgba(0, 255, 255, 0.5),
+      2px 0 rgba(255, 0, 80, 0.5);
+    transform: translate(-2px, 0);
+    clip-path: inset(10% 0 50% 0);
+  }
+  95% {
+    text-shadow: 0 0 30px var(--accent-glow);
+    transform: translate(0);
+    clip-path: none;
     opacity: 0.9;
+  }
+}
+
+/* Second layer glitch — offset clip for RGB split depth */
+@keyframes logoGlitchLayer {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+  }
+  89%,
+  94% {
+    opacity: 1;
+    transform: translate(4px, 0);
+    color: rgba(0, 255, 255, 0.5);
+  }
+  91%,
+  93% {
+    opacity: 1;
+    transform: translate(-4px, 0);
+    color: rgba(255, 0, 80, 0.5);
+  }
+  92%,
+  95% {
+    opacity: 0;
   }
 }
 
@@ -217,7 +280,21 @@ a {
   color: var(--accent);
   letter-spacing: 0.04em;
   line-height: 1;
-  animation: logoFlicker 8s infinite;
+  position: relative;
+  animation: logoGlitch 7s infinite;
+}
+
+/* Ghost layer for RGB split depth effect */
+.logo-icon::after {
+  content: "MANGA";
+  position: absolute;
+  inset: 0;
+  font-family: var(--font-display);
+  font-size: 3rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  animation: logoGlitchLayer 7s infinite;
+  pointer-events: none;
 }
 
 .logo-divider {
@@ -1592,47 +1669,33 @@ body {
   overflow-x: hidden;
 }
 
-/* ─── Speed Lines on Tile Hover ─────────────────────────────────────────────── */
-/* Speed lines are on the tile itself, strictly behind the cover — no layout impact */
-.manga-tile {
+.tile-cover {
   position: relative;
+  overflow: hidden;
 }
 
-.manga-tile::before {
+/* ─── Speed Lines on Tile Hover ─────────────────────────────────────────────── */
+.tile-cover::after {
   content: "";
   position: absolute;
-  /* Constrain exactly to the cover area — top of tile, full width, cover height only */
-  top: 0;
-  left: 0;
-  right: 0;
-  /* padding-top on .tile-cover is 110% of width — match it */
-  padding-top: 110%;
+  inset: 0;
   background: repeating-conic-gradient(
     from 0deg at 50% 50%,
     transparent 0deg,
     transparent 7deg,
-    rgba(230, 57, 70, 0.2) 7.5deg,
+    rgba(230, 57, 70, 0.22) 7.5deg,
     transparent 8deg
   );
   opacity: 0;
-  transform: scale(0.7) rotate(0deg);
+  transform: scale(0.5) rotate(0deg);
   transition:
     opacity 0.2s ease,
-    transform 0.3s ease;
+    transform 0.35s ease;
   pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
+  z-index: 2;
 }
 
-/* Tile cover sits above the lines */
-.tile-cover {
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-}
-
-/* Trigger on hover */
-.manga-tile:hover::before {
+.manga-tile:hover .tile-cover::after {
   opacity: 1;
-  transform: scale(1.5) rotate(12deg);
+  transform: scale(2.2) rotate(12deg);
 }
