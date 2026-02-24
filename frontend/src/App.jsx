@@ -218,7 +218,25 @@ function InkCursor() {
     let last = { x: 0, y: 0 };
     let count = 0;
 
+    // Custom cursor dot
+    const dot = document.createElement("div");
+    dot.style.cssText = `
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease;
+      mix-blend-mode: difference;
+    `;
+    document.body.appendChild(dot);
+
     const onMove = (e) => {
+      dot.style.left = e.clientX + "px";
+      dot.style.top = e.clientY + "px";
       const dx = e.clientX - last.x;
       const dy = e.clientY - last.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
@@ -239,7 +257,10 @@ function InkCursor() {
     };
 
     window.addEventListener("mousemove", onMove);
-    return () => window.removeEventListener("mousemove", onMove);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      dot.remove();
+    };
   }, []);
 
   return null;
