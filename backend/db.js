@@ -69,6 +69,33 @@ export function isCacheFresh(manga) {
   return ageHours < CACHE_TTL_HOURS;
 }
 
+// Log a chapter read to the activity table
+export async function logReadActivity(mangaId, chapter) {
+  return prisma.readActivity.create({
+    data: { mangaId, chapter: parseInt(chapter) },
+  });
+}
+
+// Get all activity for the past year, grouped by date
+export async function getActivityHeatmap() {
+  const since = new Date();
+  since.setFullYear(since.getFullYear() - 1);
+
+  const activity = await prisma.readActivity.findMany({
+    where: { readAt: { gte: since } },
+    select: { readAt: true },
+  });
+
+  // Group by date string YYYY-MM-DD and count
+  const map = {};
+  activity.forEach(({ readAt }) => {
+    const date = readAt.toISOString().slice(0, 10);
+    map[date] = (map[date] || 0) + 1;
+  });
+
+  return map;
+}
+
 process.on("beforeExit", async () => {
   await prisma.$disconnect();
 });

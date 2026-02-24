@@ -374,6 +374,131 @@ function MangaTile({ manga, chapter, onRemove, onProgressUpdate, onStatusChange 
   );
 }
 
+// ─── Activity Heatmap ─────────────────────────────────────────────────────────
+function ActivityHeatmap() {
+  const [data,    setData]    = useState({});
+  const [loading, setLoading] = useState(true);
+  const [tooltip, setTooltip] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/activity/heatmap`)
+      .then((r) => r.json())
+      .then((r) => setData(r.data || {}))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Build 52 weeks × 7 days grid going back from today
+  const today    = new Date();
+  const cells    = [];
+  const dayMs    = 86400000;
+
+  // Start from the Sunday 52 weeks ago
+  const start = new Date(today);
+  start.setDate(start.getDate() - 364);
+  start.setDate(start.getDate() - start.getDay()); // rewind to Sunday
+
+  for (let w = 0; w < 53; w++) {
+    const week = [];
+    for (let d = 0; d < 7; d++) {
+      const date     = new Date(start.getTime() + (w * 7 + d) * dayMs);
+      const dateStr  = date.toISOString().slice(0, 10);
+      const count    = data[dateStr] || 0;
+      const isFuture = date > today;
+      week.push({ dateStr, count, isFuture });
+    }
+    cells.push(week);
+  }
+
+  const maxCount = Math.max(...Object.values(data), 1);
+
+  const getLevel = (count) => {
+    if (count === 0) return 0;
+    if (count <= maxCount * 0.25) return 1;
+    if (count <= maxCount * 0.5)  return 2;
+    if (count <= maxCount * 0.75) return 3;
+    return 4;
+  };
+
+  const months = [];
+  cells.forEach((week, wi) => {
+    const firstDay = new Date(week[0].dateStr);
+    if (firstDay.getDate() <= 7) {
+      months.push({ label: firstDay.toLocaleString("default", { month: "short" }), col: wi });
+    }
+  });
+
+  const totalChapters = Object.values(data).reduce((a, b) => a + b, 0);
+
+  if (loading) return null;
+
+  return (
+    <div className="heatmap-wrap">
+      <div className="heatmap-header">
+        <span className="heatmap-title">Reading Activity</span>
+        <span className="heatmap-total">
+          {totalChapters} chapter{totalChapters !== 1 ? "s" : ""} marked read in the past year
+        </span>
+      </div>
+
+      <div className="heatmap-scroll">
+        <div className="heatmap-grid-wrap">
+          {/* Month labels */}
+          <div className="heatmap-months">
+            {months.map((m, i) => (
+              <span key={i} className="heatmap-month" style={{ gridColumn: m.col + 1 }}>
+                {m.label}
+              </span>
+            ))}
+          </div>
+
+          {/* Cell grid */}
+          <div className="heatmap-grid">
+            {cells.map((week, wi) => (
+              <div key={wi} className="heatmap-week">
+                {week.map(({ dateStr, count, isFuture }) => (
+                  <div
+                    key={dateStr}
+                    className={`heatmap-cell level-${isFuture ? "future" : getLevel(count)}`}
+                    onMouseEnter={(e) => {
+                      if (isFuture) return;
+                      const rect = e.target.getBoundingClientRect();
+                      setTooltip({
+                        x: rect.left + rect.width / 2,
+                        y: rect.top - 8,
+                        text: count === 0
+                          ? `No activity · ${dateStr}`
+                          : `${count} chapter${count > 1 ? "s" : ""} · ${dateStr}`,
+                      });
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div className="heatmap-legend">
+            <span className="heatmap-legend-label">Less</span>
+            {[0,1,2,3,4].map((l) => (
+              <div key={l} className={`heatmap-cell level-${l}`} />
+            ))}
+            <span className="heatmap-legend-label">More</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Tooltip */}
+      {tooltip && (
+        <div className="heatmap-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
+          {tooltip.text}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── List Filter Bar ──────────────────────────────────────────────────────────
 function ListFilterBar({ query, onChange }) {
   return (
@@ -568,7 +693,12 @@ export default function App() {
 
         {listError && <p className="error-msg">{listError}</p>}
 
-        {activeTab === "reading" && renderGrid(reading, "You're not reading anything yet.", true)}
+        {activeTab === "reading" && (
+          <>
+            <ActivityHeatmap />
+            {renderGrid(reading, "You're not reading anything yet.", true)}
+          </>
+        )}
         {activeTab === "completed" && renderGrid(completed, "No completed manga yet.", false)}
 
         {activeTab === "search" && (

@@ -11,6 +11,8 @@ import {
   updateReadingStatus,
   updateChapterCache,
   isCacheFresh,
+  logReadActivity,
+  getActivityHeatmap,
 } from "./db.js";
 import { startNotifier, checkForUpdates } from "./notifier.js";
 
@@ -119,7 +121,10 @@ app.patch("/api/tracked/:id/progress", async (req, res) => {
   if (currentChapter === undefined)
     return res.status(400).json({ error: "currentChapter required" });
   try {
-    res.json({ data: await updateProgress(req.params.id, currentChapter) });
+    const updated = await updateProgress(req.params.id, currentChapter);
+    // Log to activity heatmap — fire and forget, don't block the response
+    logReadActivity(req.params.id, currentChapter).catch(() => {});
+    res.json({ data: updated });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not update progress." });
@@ -146,6 +151,16 @@ app.get("/api/test-notifier", async (_req, res) => {
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/activity/heatmap — returns { "2025-01-04": 3, "2025-01-05": 1, ... }
+app.get("/api/activity/heatmap", async (_req, res) => {
+  try {
+    res.json({ data: await getActivityHeatmap() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch activity." });
   }
 });
 
