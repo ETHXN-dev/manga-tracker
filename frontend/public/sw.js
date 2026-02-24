@@ -1,14 +1,8 @@
-// Increment this version every deploy to bust the cache
-const CACHE_VERSION = "mangalog-v3";
+// Bump this version on every deploy to force cache refresh
+const CACHE_VERSION = "mangalog-v5";
 const CACHE_NAME = CACHE_VERSION;
 
-const STATIC_ASSETS = ["/", "/index.html"];
-
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)),
-  );
-  // Take over immediately without waiting for old SW to die
   self.skipWaiting();
 });
 
@@ -22,7 +16,6 @@ self.addEventListener("activate", (event) => {
         ),
       ),
   );
-  // Claim all open tabs immediately
   self.clients.claim();
 });
 
@@ -30,28 +23,19 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Never cache API calls
-  if (url.pathname.startsWith("/api")) {
+  // Never cache — API calls, HTML, JS, CSS always go to network
+  if (
+    url.pathname.startsWith("/api") ||
+    url.pathname.endsWith(".html") ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css") ||
+    url.pathname === "/"
+  ) {
     event.respondWith(fetch(request));
     return;
   }
 
-  // JS/CSS assets — network first so updates always come through
-  // Falls back to cache if offline
-  if (url.pathname.match(/\.(js|css|jsx)$/)) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request)),
-    );
-    return;
-  }
-
-  // Everything else — cache first, fallback to network
+  // Cache only static assets like images and fonts
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
