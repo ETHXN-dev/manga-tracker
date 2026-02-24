@@ -1444,17 +1444,23 @@ a {
 }
 
 /* ─── Completed Shelf ────────────────────────────────────────────────────────── */
-.tile-flip-wrap.is-completed {
-  opacity: 0.6;
-  filter: saturate(0.3) brightness(0.85);
-  transition:
-    opacity 0.25s ease,
-    filter 0.25s ease;
+/* Completed — only the cover image is desaturated, info stays readable */
+.tile-flip-wrap.is-completed .tile-cover img {
+  filter: saturate(0.25) brightness(0.8);
+  transition: filter 0.25s ease;
 }
 
-.tile-flip-wrap.is-completed:hover {
-  opacity: 1;
+.tile-flip-wrap.is-completed .tile-info {
+  opacity: 0.7;
+  transition: opacity 0.25s ease;
+}
+
+.tile-flip-wrap.is-completed:hover .tile-cover img {
   filter: saturate(1) brightness(1);
+}
+
+.tile-flip-wrap.is-completed:hover .tile-info {
+  opacity: 1;
 }
 
 .tile-completed-badge {
