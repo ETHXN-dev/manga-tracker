@@ -13,7 +13,6 @@ import {
   isCacheFresh,
   logReadActivity,
   getActivityHeatmap,
-  bustAllChapterCaches,
 } from "./db.js";
 import { startNotifier, checkForUpdates } from "./notifier.js";
 
@@ -143,19 +142,6 @@ app.patch("/api/tracked/:id/reading-status", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not update reading status." });
-  }
-});
-
-// POST /api/admin/bust-cache — force re-fetch of all chapter data
-app.post("/api/admin/bust-cache", async (_req, res) => {
-  try {
-    await bustAllChapterCaches();
-    res.json({
-      ok: true,
-      message: "All chapter caches cleared — will re-fetch on next load",
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
 });
 
