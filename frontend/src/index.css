@@ -1445,8 +1445,8 @@ a {
 
 /* ─── Completed Shelf ────────────────────────────────────────────────────────── */
 .manga-tile.is-completed {
-  opacity: 0.45;
-  filter: saturate(0.15) brightness(0.8);
+  opacity: 0.6;
+  filter: saturate(0.3) brightness(0.85);
   transition:
     opacity 0.25s ease,
     filter 0.25s ease;
