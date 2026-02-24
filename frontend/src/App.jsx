@@ -170,102 +170,6 @@ function KanjiBackground() {
   );
 }
 
-// ─── Ink Cursor ───────────────────────────────────────────────────────────────
-// Leaves brief red ink splatter drops as the mouse moves
-function InkCursor() {
-  useEffect(() => {
-    const MAX = 18;
-
-    const createDrop = (x, y) => {
-      const el = document.createElement("div");
-
-      // Random splatter shape — mix of circles and streaks
-      const size = Math.random() * 10 + 5;
-      const scaleX = Math.random() * 1.8 + 0.4;
-      const scaleY = Math.random() * 1.8 + 0.4;
-      const rotate = Math.random() * 360;
-      const offsetX = (Math.random() - 0.5) * 24;
-      const offsetY = (Math.random() - 0.5) * 24;
-
-      el.style.cssText = `
-        position: fixed;
-        left: ${x + offsetX}px;
-        top:  ${y + offsetY}px;
-        width:  ${size}px;
-        height: ${size}px;
-        border-radius: ${Math.random() > 0.5 ? "50%" : "30% 70% 70% 30% / 30% 30% 70% 70%"};
-        background: rgba(230, 57, 70, ${Math.random() * 0.6 + 0.4});
-        transform: translate(-50%, -50%) scale(${scaleX}, ${scaleY}) rotate(${rotate}deg);
-        pointer-events: none;
-        z-index: 9999;
-        transition: opacity 0.5s ease, transform 0.5s ease;
-      `;
-
-      document.body.appendChild(el);
-
-      // Animate out
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          el.style.opacity = "0";
-          el.style.transform = `translate(-50%, -50%) scale(${scaleX * 1.4}, ${scaleY * 1.4}) rotate(${rotate + 20}deg)`;
-        });
-      });
-
-      setTimeout(() => el.remove(), 520);
-      return el;
-    };
-
-    let last = { x: 0, y: 0 };
-    let count = 0;
-
-    // Custom cursor dot
-    const dot = document.createElement("div");
-    dot.style.cssText = `
-      position: fixed;
-      width: 8px;
-      height: 8px;
-      background: white;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 99999;
-      transform: translate(-50%, -50%);
-      transition: transform 0.1s ease;
-      mix-blend-mode: difference;
-    `;
-    document.body.appendChild(dot);
-
-    const onMove = (e) => {
-      dot.style.left = e.clientX + "px";
-      dot.style.top = e.clientY + "px";
-      const dx = e.clientX - last.x;
-      const dy = e.clientY - last.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      // Only spawn if mouse moved enough — avoids spam on tiny movements
-      if (dist < 12) return;
-      last = { x: e.clientX, y: e.clientY };
-
-      // Spawn 1-3 drops per movement burst
-      const num = Math.floor(Math.random() * 2) + 1;
-      for (let i = 0; i < num; i++) {
-        if (count < MAX) {
-          count++;
-          const drop = createDrop(e.clientX, e.clientY);
-          drop.addEventListener("transitionend", () => count--, { once: true });
-        }
-      }
-    };
-
-    window.addEventListener("mousemove", onMove);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      dot.remove();
-    };
-  }, []);
-
-  return null;
-}
-
 // ─── Chapter Dropdown ─────────────────────────────────────────────────────────
 function ChapterDropdown({ latestChapter, readUrl, mangaboltSlug }) {
   const [open, setOpen] = useState(false);
@@ -812,7 +716,6 @@ export default function App() {
   return (
     <div className="app" style={{ position: "relative", zIndex: 1 }}>
       <KanjiBackground />
-      <InkCursor />
       <header className="header">
         <div className="header-inner">
           <div className="logo">

@@ -1699,13 +1699,3 @@ body {
   opacity: 1;
   transform: scale(2.2) rotate(12deg);
 }
-
-/* ─── Ink Cursor ─────────────────────────────────────────────────────────────── */
-/* Hide default cursor on desktop, keep it on touch devices */
-@media (hover: hover) {
-  *,
-  *::before,
-  *::after {
-    cursor: none !important;
-  }
-}
