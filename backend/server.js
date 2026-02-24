@@ -13,6 +13,7 @@ import {
   isCacheFresh,
   logReadActivity,
   getActivityHeatmap,
+  bustAllChapterCaches,
 } from "./db.js";
 import { startNotifier, checkForUpdates } from "./notifier.js";
 
@@ -145,6 +146,19 @@ app.patch("/api/tracked/:id/reading-status", async (req, res) => {
   }
 });
 
+// POST /api/admin/bust-cache — force re-fetch of all chapter data
+app.post("/api/admin/bust-cache", async (_req, res) => {
+  try {
+    await bustAllChapterCaches();
+    res.json({
+      ok: true,
+      message: "All chapter caches cleared — will re-fetch on next load",
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/api/test-notifier", async (_req, res) => {
   try {
     await checkForUpdates();
@@ -177,3 +191,19 @@ app.listen(PORT, () =>
 );
 
 startNotifier();
+
+// ─── Keep-alive ping ──────────────────────────────────────────────────────────
+// Render free tier spins down after 15min inactivity — ping ourselves every 10min
+// so the cron never misses a scheduled run
+if (process.env.NODE_ENV === "production" && process.env.RENDER_EXTERNAL_URL) {
+  const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
+  setInterval(async () => {
+    try {
+      await fetch(`${process.env.RENDER_EXTERNAL_URL}/api/tracked`);
+      console.log("[keep-alive] ping sent");
+    } catch (err) {
+      console.error("[keep-alive] ping failed:", err.message);
+    }
+  }, PING_INTERVAL);
+  console.log("[keep-alive] started — pinging every 10 minutes");
+}
