@@ -1444,7 +1444,7 @@ a {
 }
 
 /* ─── Completed Shelf ────────────────────────────────────────────────────────── */
-.manga-tile.is-completed {
+.tile-flip-wrap.is-completed {
   opacity: 0.6;
   filter: saturate(0.3) brightness(0.85);
   transition:
@@ -1452,7 +1452,7 @@ a {
     filter 0.25s ease;
 }
 
-.manga-tile.is-completed:hover {
+.tile-flip-wrap.is-completed:hover {
   opacity: 1;
   filter: saturate(1) brightness(1);
 }
