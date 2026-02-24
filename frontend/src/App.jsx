@@ -383,8 +383,8 @@ function ActivityHeatmap() {
   useEffect(() => {
     fetch(`${API_BASE}/activity/heatmap`)
       .then((r) => r.json())
-      .then((r) => setData(r.data || {}))
-      .catch(() => {})
+      .then((r) => { setData(r.data || {}); })
+      .catch((e) => { console.error("[heatmap] fetch failed:", e); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -429,8 +429,6 @@ function ActivityHeatmap() {
   });
 
   const totalChapters = Object.values(data).reduce((a, b) => a + b, 0);
-
-  if (loading) return null;
 
   return (
     <div className="heatmap-wrap">
