@@ -511,6 +511,33 @@ function MangaTile({
   );
 }
 
+// ─── Now Reading Ticker ───────────────────────────────────────────────────────
+function NowReadingTicker({ manga }) {
+  if (!manga || manga.length === 0) return null;
+
+  // Only show reading manga, repeat titles to fill the strip
+  const titles = manga
+    .filter((m) => m.readingStatus !== "completed")
+    .map((m) => m.title.toUpperCase());
+
+  if (titles.length === 0) return null;
+
+  // Duplicate enough times to ensure seamless loop
+  const repeated = [...titles, ...titles, ...titles];
+  const text = repeated.join("  ·  ");
+
+  return (
+    <div className="ticker-wrap">
+      <div className="ticker-label">NOW READING</div>
+      <div className="ticker-track">
+        <span className="ticker-content">
+          {text}&nbsp;&nbsp;&nbsp;{text}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Activity Heatmap ─────────────────────────────────────────────────────────
 function ActivityHeatmap() {
   const [data, setData] = useState(null);
@@ -866,6 +893,8 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      <NowReadingTicker manga={trackedManga} />
 
       <main className="main">
         <nav className="tabs">
