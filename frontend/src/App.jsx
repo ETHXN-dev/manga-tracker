@@ -727,6 +727,7 @@ export default function App() {
     parseInt(localStorage.getItem("mangalog_count") || "6"),
   );
   const [listQuery, setListQuery] = useState("");
+  const [sortBy, setSortBy] = useState("added");
 
   const debouncedQuery = useDebounce(query, 500);
 
@@ -802,12 +803,33 @@ export default function App() {
   };
 
   const trackedIds = new Set(trackedManga.map((m) => m.id));
-  const filterByQuery = (list) =>
-    !listQuery.trim()
+  const filterByQuery = (list) => {
+    let result = !listQuery.trim()
       ? list
       : list.filter((m) =>
           m.title.toLowerCase().includes(listQuery.toLowerCase().trim()),
         );
+
+    switch (sortBy) {
+      case "alpha":
+        return [...result].sort((a, b) => a.title.localeCompare(b.title));
+      case "behind":
+        return [...result].sort((a, b) => {
+          const aGap =
+            (chapterMap[b.id]?.chapter || 0) - (b.currentChapter || 0);
+          const bGap =
+            (chapterMap[a.id]?.chapter || 0) - (a.currentChapter || 0);
+          return aGap - bGap;
+        });
+      case "latest":
+        return [...result].sort(
+          (a, b) =>
+            (chapterMap[b.id]?.chapter || 0) - (chapterMap[a.id]?.chapter || 0),
+        );
+      default: // "added" — natural DB order
+        return result;
+    }
+  };
   const reading = filterByQuery(
     trackedManga.filter((m) => m.readingStatus !== "completed"),
   );
@@ -815,11 +837,27 @@ export default function App() {
     trackedManga.filter((m) => m.readingStatus === "completed"),
   );
 
+  const SortBar = () => (
+    <div className="list-toolbar">
+      <ListFilterBar query={listQuery} onChange={setListQuery} />
+      <select
+        className="sort-select"
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+      >
+        <option value="added">Recently Added</option>
+        <option value="alpha">A → Z</option>
+        <option value="behind">Most Behind</option>
+        <option value="latest">Most Chapters</option>
+      </select>
+    </div>
+  );
+
   const renderGrid = (list, emptyMessage, showAddButton) => {
     if (listLoading) {
       return (
         <>
-          <ListFilterBar query={listQuery} onChange={setListQuery} />
+          <SortBar />
           <div className="tracked-grid">
             {Array.from({ length: cachedCount }).map((_, i) => (
               <TileSkeleton key={i} />
@@ -833,7 +871,7 @@ export default function App() {
 
     return (
       <>
-        <ListFilterBar query={listQuery} onChange={setListQuery} />
+        <SortBar />
         {noResults ? (
           <p className="no-results">No manga matching "{listQuery}"</p>
         ) : list.length === 0 ? (
@@ -917,6 +955,12 @@ export default function App() {
             )}
           </button>
           <button
+            className={`tab ${activeTab === "activity" ? "active" : ""}`}
+            onClick={() => setActiveTab("activity")}
+          >
+            Activity
+          </button>
+          <button
             className={`tab ${activeTab === "search" ? "active" : ""}`}
             onClick={() => setActiveTab("search")}
           >
@@ -926,14 +970,11 @@ export default function App() {
 
         {listError && <p className="error-msg">{listError}</p>}
 
-        {activeTab === "reading" && (
-          <>
-            <ActivityHeatmap />
-            {renderGrid(reading, "You're not reading anything yet.", true)}
-          </>
-        )}
+        {activeTab === "reading" &&
+          renderGrid(reading, "You're not reading anything yet.", true)}
         {activeTab === "completed" &&
           renderGrid(completed, "No completed manga yet.", false)}
+        {activeTab === "activity" && <ActivityHeatmap />}
 
         {activeTab === "search" && (
           <section>
