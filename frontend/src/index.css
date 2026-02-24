@@ -385,19 +385,22 @@ a {
 /* ─── Tabs ───────────────────────────────────────────────────────────────────── */
 .tabs {
   display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 1.75rem;
-  gap: 0.25rem;
 }
 
 .tab {
-  padding: 0.75rem 1.25rem;
-  font-size: 0.72rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: var(--text-muted);
-  border-bottom: 2px solid transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
   transition:
     color 0.18s,
     border-color 0.18s,
@@ -405,36 +408,35 @@ a {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: -1px;
-  border-radius: 4px 4px 0 0;
   position: relative;
 }
 
 .tab:hover {
   color: var(--text-sub);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-2);
+  border-color: var(--border);
 }
 
 .tab.active {
   color: var(--accent);
-  border-bottom-color: var(--accent);
-  background: rgba(230, 57, 70, 0.04);
+  background: rgba(230, 57, 70, 0.08);
+  border-color: rgba(230, 57, 70, 0.3);
+  box-shadow: 0 0 12px rgba(230, 57, 70, 0.1);
 }
 
-/* Glowing dot on active tab */
-.tab.active::before {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 30px;
-  height: 2px;
+.tab-count {
   background: var(--accent);
-  box-shadow:
-    0 0 8px var(--accent-glow),
-    0 0 16px var(--accent-glow);
-  border-radius: 2px;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.1em 0.45em;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+
+.tab:not(.active) .tab-count {
+  background: var(--surface-3);
+  color: var(--text-muted);
 }
 
 .tab-count {
@@ -780,10 +782,10 @@ a {
 
 /* Info below the cover */
 .tile-info {
-  padding: 0.75rem 0.875rem 0.875rem;
+  padding: 0.875rem 1rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
   flex: 1;
 }
 
@@ -1170,10 +1172,11 @@ a {
 
 /* Chapter number — prominent, on its own line */
 .chapter-num {
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 800;
   color: var(--accent);
   line-height: 1;
+  letter-spacing: 0.02em;
 }
 
 /* Row: "Read now ↗" link + dropdown toggle side by side */
@@ -1187,9 +1190,9 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-sub);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   text-decoration: none;
@@ -1566,6 +1569,10 @@ a {
 /* ─── List Filter Bar ────────────────────────────────────────────────────────── */
 .list-filter-bar {
   margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .list-filter-wrap {
@@ -1899,11 +1906,9 @@ body {
 
 .heatmap-header {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 0.75rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
 .heatmap-title {
@@ -1912,11 +1917,14 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .heatmap-total {
   font-size: 0.68rem;
   color: var(--text-muted);
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--border);
 }
 
 .heatmap-scroll {
