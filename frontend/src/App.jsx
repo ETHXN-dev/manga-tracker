@@ -376,72 +376,65 @@ function MangaTile({ manga, chapter, onRemove, onProgressUpdate, onStatusChange 
 
 // ─── Activity Heatmap ─────────────────────────────────────────────────────────
 function ActivityHeatmap() {
-  const [data,    setData]    = useState({});
-  const [loading, setLoading] = useState(true);
+  const [data,    setData]    = useState(null);
   const [tooltip, setTooltip] = useState(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/activity/heatmap`)
       .then((r) => r.json())
-      .then((r) => { setData(r.data || {}); })
-      .catch((e) => { console.error("[heatmap] fetch failed:", e); })
-      .finally(() => setLoading(false));
+      .then((r) => setData(r.data || {}))
+      .catch((e) => { console.error("[heatmap]", e); setData({}); });
   }, []);
 
-  // Build 52 weeks × 7 days grid going back from today
-  const today    = new Date();
-  const cells    = [];
-  const dayMs    = 86400000;
-
-  // Start from the Sunday 52 weeks ago
+  const today = new Date();
+  const dayMs = 86400000;
   const start = new Date(today);
   start.setDate(start.getDate() - 364);
-  start.setDate(start.getDate() - start.getDay()); // rewind to Sunday
+  start.setDate(start.getDate() - start.getDay());
 
+  const weeks = [];
   for (let w = 0; w < 53; w++) {
     const week = [];
     for (let d = 0; d < 7; d++) {
-      const date     = new Date(start.getTime() + (w * 7 + d) * dayMs);
-      const dateStr  = date.toISOString().slice(0, 10);
-      const count    = data[dateStr] || 0;
-      const isFuture = date > today;
-      week.push({ dateStr, count, isFuture });
+      const date    = new Date(start.getTime() + (w * 7 + d) * dayMs);
+      const dateStr = date.toISOString().slice(0, 10);
+      const count   = data ? (data[dateStr] || 0) : 0;
+      week.push({ dateStr, count, future: date > today });
     }
-    cells.push(week);
+    weeks.push(week);
   }
 
-  const maxCount = Math.max(...Object.values(data), 1);
+  const max   = data ? Math.max(...Object.values(data), 1) : 1;
+  const total = data ? Object.values(data).reduce((a, b) => a + b, 0) : 0;
 
   const getLevel = (count) => {
-    if (count === 0) return 0;
-    if (count <= maxCount * 0.25) return 1;
-    if (count <= maxCount * 0.5)  return 2;
-    if (count <= maxCount * 0.75) return 3;
+    if (!count) return 0;
+    if (count <= max * 0.25) return 1;
+    if (count <= max * 0.5)  return 2;
+    if (count <= max * 0.75) return 3;
     return 4;
   };
 
   const months = [];
-  cells.forEach((week, wi) => {
-    const firstDay = new Date(week[0].dateStr);
-    if (firstDay.getDate() <= 7) {
-      months.push({ label: firstDay.toLocaleString("default", { month: "short" }), col: wi });
+  weeks.forEach((week, wi) => {
+    const d = new Date(week[0].dateStr);
+    if (d.getDate() <= 7) {
+      months.push({ label: d.toLocaleString("default", { month: "short" }), col: wi });
     }
   });
-
-  const totalChapters = Object.values(data).reduce((a, b) => a + b, 0);
 
   return (
     <div className="heatmap-wrap">
       <div className="heatmap-header">
         <span className="heatmap-title">Reading Activity</span>
         <span className="heatmap-total">
-          {totalChapters} chapter{totalChapters !== 1 ? "s" : ""} marked read in the past year
+          {data === null
+            ? "Loading…"
+            : `${total} chapter${total !== 1 ? "s" : ""} marked read in the past year`}
         </span>
       </div>
-
       <div className="heatmap-scroll">
         <div className="heatmap-grid-wrap">
-          {/* Month labels */}
           <div className="heatmap-months">
             {months.map((m, i) => (
               <span key={i} className="heatmap-month" style={{ gridColumn: m.col + 1 }}>
@@ -449,17 +442,15 @@ function ActivityHeatmap() {
               </span>
             ))}
           </div>
-
-          {/* Cell grid */}
           <div className="heatmap-grid">
-            {cells.map((week, wi) => (
+            {weeks.map((week, wi) => (
               <div key={wi} className="heatmap-week">
-                {week.map(({ dateStr, count, isFuture }) => (
+                {week.map(({ dateStr, count, future }) => (
                   <div
                     key={dateStr}
-                    className={`heatmap-cell level-${isFuture ? "future" : getLevel(count)}`}
+                    className={`heatmap-cell level-${future ? "future" : getLevel(count)}`}
                     onMouseEnter={(e) => {
-                      if (isFuture) return;
+                      if (future) return;
                       const rect = e.target.getBoundingClientRect();
                       setTooltip({
                         x: rect.left + rect.width / 2,
@@ -475,19 +466,13 @@ function ActivityHeatmap() {
               </div>
             ))}
           </div>
-
-          {/* Legend */}
           <div className="heatmap-legend">
             <span className="heatmap-legend-label">Less</span>
-            {[0,1,2,3,4].map((l) => (
-              <div key={l} className={`heatmap-cell level-${l}`} />
-            ))}
+            {[0,1,2,3,4].map((l) => <div key={l} className={`heatmap-cell level-${l}`} />)}
             <span className="heatmap-legend-label">More</span>
           </div>
         </div>
       </div>
-
-      {/* Tooltip */}
       {tooltip && (
         <div className="heatmap-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
           {tooltip.text}
