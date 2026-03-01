@@ -13,8 +13,9 @@ model Manga {
   coverUrl         String?
   status           String?
   year             Int?
-  currentChapter   Int?      @default(0)
-  readingStatus    String    @default("reading")
+  currentChapter       Int?      @default(0)
+  lastNotifiedChapter  Int?      @default(0)
+  readingStatus        String    @default("reading")
   latestChapter    Int?
   latestChapterUrl String?
   mangaboltSlug    String?

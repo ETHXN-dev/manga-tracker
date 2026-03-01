@@ -17,7 +17,7 @@
 
 import cron from "node-cron";
 import { Resend } from "resend";
-import { getAllTracked, updateProgress, updateChapterCache } from "./db.js";
+import { getAllTracked, updateChapterCache, updateLastNotified } from "./db.js";
 import { getLatestChapter } from "./anilist.js";
 
 // ─── Email via Resend (works on Render free tier — uses HTTPS not SMTP) ───────
@@ -88,7 +88,9 @@ export async function checkForUpdates() {
       if (!data) return null;
 
       const latest = parseInt(data.chapter);
-      const current = manga.currentChapter || 0;
+      // Use lastNotifiedChapter as the baseline — NOT currentChapter
+      // This way the badge on the site still shows unread chapters
+      const lastSeen = manga.lastNotifiedChapter || manga.currentChapter || 0;
 
       // Always update cache when notifier fetches fresh data
       await updateChapterCache(manga.id, {
@@ -97,11 +99,11 @@ export async function checkForUpdates() {
         mangaboltSlug: data.mangaboltSlug,
       }).catch(() => {});
 
-      if (!isNaN(latest) && latest > current) {
+      if (!isNaN(latest) && latest > lastSeen) {
         return {
           id: manga.id,
           title: manga.title,
-          oldChapter: current,
+          oldChapter: lastSeen,
           newChapter: latest,
           readUrl: data.readUrl,
         };
@@ -113,8 +115,9 @@ export async function checkForUpdates() {
   for (const result of results) {
     if (result.status === "fulfilled" && result.value) {
       updates.push(result.value);
-      // Update the stored chapter so we don't notify again next run
-      await updateProgress(result.value.id, result.value.newChapter);
+      // Only update lastNotifiedChapter — NOT currentChapter
+      // currentChapter is reading progress, only the user should change that
+      await updateLastNotified(result.value.id, result.value.newChapter);
     }
   }
 
@@ -134,13 +137,14 @@ export async function checkForUpdates() {
 // Change the cron expression to adjust frequency.
 // Format: minute hour day month weekday
 export function startNotifier() {
-  console.log("[notifier] Started — checking every 6 hours");
+  console.log("[notifier] Started — checking every 30 minutes");
 
   // Run once immediately on startup to catch anything missed
   checkForUpdates().catch(console.error);
 
   // Then schedule recurring checks
-  cron.schedule("0 0,6,12,18 * * *", () => {
+  // Check every 30 minutes for near-instant notifications
+  cron.schedule("*/30 * * * *", () => {
     checkForUpdates().catch(console.error);
   });
 }

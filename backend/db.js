@@ -45,6 +45,15 @@ export async function updateReadingStatus(id, readingStatus) {
   });
 }
 
+// Only updated by the notifier — tracks what chapter we last emailed about
+// Separate from currentChapter which is the user's reading progress
+export async function updateLastNotified(id, lastNotifiedChapter) {
+  return prisma.manga.update({
+    where: { id },
+    data: { lastNotifiedChapter: parseInt(lastNotifiedChapter) },
+  });
+}
+
 // Write chapter data back to the DB cache
 export async function updateChapterCache(
   id,
@@ -94,6 +103,13 @@ export async function getActivityHeatmap() {
   });
 
   return map;
+}
+
+// Bust chapter cache for all manga — forces re-fetch on next request
+export async function bustAllChapterCaches() {
+  return prisma.manga.updateMany({
+    data: { chapterCachedAt: null },
+  });
 }
 
 process.on("beforeExit", async () => {
