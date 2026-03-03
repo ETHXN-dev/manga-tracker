@@ -23,7 +23,44 @@ import { getLatestChapter } from "./anilist.js";
 // ─── Email via Resend (works on Render free tier — uses HTTPS not SMTP) ───────
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+async function sendPushNotification(updates) {
+  if (!process.env.NTFY_TOPIC) return;
+
+  const title =
+    updates.length === 1
+      ? `📚 ${updates[0].title} — Ch. ${updates[0].newChapter} dropped`
+      : `📚 ${updates.length} new chapters dropped`;
+
+  const body = updates
+    .map(({ title, newChapter }) => `${title} → Ch. ${newChapter}`)
+    .join("\n");
+
+  try {
+    await fetch(`https://ntfy.sh/${process.env.NTFY_TOPIC}`, {
+      method: "POST",
+      headers: {
+        Title: title,
+        Priority: "high",
+        Tags: "manga,book",
+        "Content-Type": "text/plain",
+      },
+      body,
+    });
+    console.log(`[notifier] Push notification sent`);
+  } catch (err) {
+    console.error("[notifier] Push notification failed:", err.message);
+  }
+}
+
 async function sendNotification(updates) {
+  // Send both push and email in parallel
+  await Promise.allSettled([
+    sendPushNotification(updates),
+    sendEmailNotification(updates),
+  ]);
+}
+
+async function sendEmailNotification(updates) {
   if (!process.env.RESEND_API_KEY || !process.env.NOTIFY_EMAIL) {
     console.log("[notifier] Email not configured — skipping send");
     return;
