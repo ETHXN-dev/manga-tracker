@@ -102,9 +102,11 @@ function ChapterDropdown({ latestChapter, readUrl, mangaboltSlug }) {
   }, [open]);
 
   const latest = parseInt(latestChapter);
-  const chapters = isNaN(latest)
-    ? []
-    : Array.from({ length: latest }, (_, i) => latest - i);
+  // Only generate chapter list when open, capped at 100 most recent chapters
+  const chapters =
+    open && !isNaN(latest)
+      ? Array.from({ length: Math.min(latest, 100) }, (_, i) => latest - i)
+      : [];
   const chUrl = (num) =>
     `https://mangabolt.com/chapter/${mangaboltSlug}-chapter-${num}/`;
 
