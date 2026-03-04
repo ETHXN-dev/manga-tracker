@@ -17,3 +17,4 @@ backend/node_modules/.prisma
 # OS
 .DS_Store
 node_modules/
+node_modules/
