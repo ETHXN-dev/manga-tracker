@@ -78,6 +78,19 @@ export function isCacheFresh(manga) {
   return ageHours < CACHE_TTL_HOURS;
 }
 
+// System status — used to track notifier health
+export async function setSystemStatus(key, value) {
+  return prisma.systemStatus.upsert({
+    where: { key },
+    update: { value },
+    create: { key, value },
+  });
+}
+
+export async function getSystemStatus(key) {
+  return prisma.systemStatus.findUnique({ where: { key } });
+}
+
 // Log a chapter read to the activity table
 export async function logReadActivity(mangaId, chapter) {
   return prisma.readActivity.create({

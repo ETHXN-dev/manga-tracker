@@ -8,27 +8,33 @@ datasource db {
 }
 
 model Manga {
-  id               String    @id
-  title            String
-  coverUrl         String?
-  status           String?
-  year             Int?
-  currentChapter       Int?      @default(0)
-  lastNotifiedChapter  Int?      @default(0)
-  readingStatus        String    @default("reading")
-  latestChapter    Int?
-  latestChapterUrl String?
-  mangaboltSlug    String?
-  chapterCachedAt  DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  activity         ReadActivity[]
+  id                  String         @id
+  title               String
+  coverUrl            String?
+  status              String?
+  year                Int?
+  currentChapter      Int?           @default(0)
+  lastNotifiedChapter Int?           @default(0)
+  readingStatus       String         @default("reading")
+  latestChapter       Int?
+  latestChapterUrl    String?
+  mangaboltSlug       String?
+  chapterCachedAt     DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  activity            ReadActivity[]
 }
 
 model ReadActivity {
-  id        Int      @id @default(autoincrement())
-  mangaId   String
-  manga     Manga    @relation(fields: [mangaId], references: [id], onDelete: Cascade)
-  chapter   Int
-  readAt    DateTime @default(now())
+  id      Int      @id @default(autoincrement())
+  mangaId String
+  manga   Manga    @relation(fields: [mangaId], references: [id], onDelete: Cascade)
+  chapter Int
+  readAt  DateTime @default(now())
+}
+
+model SystemStatus {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }

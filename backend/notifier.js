@@ -17,7 +17,12 @@
 
 import cron from "node-cron";
 import { Resend } from "resend";
-import { getAllTracked, updateChapterCache, updateLastNotified } from "./db.js";
+import {
+  getAllTracked,
+  updateChapterCache,
+  updateLastNotified,
+  setSystemStatus,
+} from "./db.js";
 import { getLatestChapter } from "./anilist.js";
 
 // ─── Email via Resend (works on Render free tier — uses HTTPS not SMTP) ───────
@@ -167,6 +172,11 @@ export async function checkForUpdates() {
   } else {
     console.log("[notifier] No new chapters found");
   }
+
+  // Always record when the notifier last ran successfully
+  await setSystemStatus("notifier_last_ran", new Date().toISOString()).catch(
+    () => {},
+  );
 }
 
 // ─── Schedule ─────────────────────────────────────────────────────────────────

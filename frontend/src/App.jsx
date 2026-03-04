@@ -538,6 +538,39 @@ function NowReadingTicker({ manga }) {
   );
 }
 
+// ─── Notifier Status ──────────────────────────────────────────────────────────
+function NotifierStatus() {
+  const [lastRan, setLastRan] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/activity/status`)
+      .then((r) => r.json())
+      .then((r) => setLastRan(r.lastRan))
+      .catch(() => {});
+  }, []);
+
+  const getTimeAgo = (iso) => {
+    if (!iso) return "Never";
+    const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+    if (diff < 60) return `${diff} seconds ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    return `${Math.floor(diff / 86400)} days ago`;
+  };
+
+  const isHealthy =
+    lastRan && Date.now() - new Date(lastRan) < 2 * 60 * 60 * 1000; // within 2 hours
+
+  return (
+    <div className="notifier-status">
+      <span className={`notifier-dot ${isHealthy ? "healthy" : "stale"}`} />
+      <span className="notifier-label">
+        Notifier last ran: <strong>{getTimeAgo(lastRan)}</strong>
+      </span>
+    </div>
+  );
+}
+
 // ─── Activity Heatmap ─────────────────────────────────────────────────────────
 function ActivityHeatmap() {
   const [data, setData] = useState(null);
@@ -981,7 +1014,12 @@ export default function App() {
           renderGrid(reading, "You're not reading anything yet.", true)}
         {activeTab === "completed" &&
           renderGrid(completed, "No completed manga yet.", false)}
-        {activeTab === "activity" && <ActivityHeatmap />}
+        {activeTab === "activity" && (
+          <>
+            <NotifierStatus />
+            <ActivityHeatmap />
+          </>
+        )}
 
         {activeTab === "search" && (
           <section>

@@ -13,6 +13,7 @@ import {
   isCacheFresh,
   logReadActivity,
   getActivityHeatmap,
+  getSystemStatus,
 } from "./db.js";
 import { startNotifier, checkForUpdates } from "./notifier.js";
 
@@ -161,6 +162,17 @@ app.get("/api/activity/heatmap", async (_req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not fetch activity." });
+  }
+});
+
+// GET /api/activity/status — returns when the notifier last ran
+app.get("/api/activity/status", async (_req, res) => {
+  try {
+    const status = await getSystemStatus("notifier_last_ran");
+    res.json({ lastRan: status?.value || null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch status." });
   }
 });
 
