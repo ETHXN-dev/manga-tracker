@@ -1,6 +1,20 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const API_KEY = import.meta.env.VITE_API_KEY || "";
+
+// Always include the API key header
+async function apiFetch(path, options = {}) {
+  const res = await apiFetch(`${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": API_KEY,
+      ...options.headers,
+    },
+  });
+  return res;
+}
 
 function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -13,9 +27,7 @@ function useDebounce(value, delay) {
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 async function searchManga(query) {
-  const res = await fetch(
-    `${API_BASE}/manga/search?q=${encodeURIComponent(query)}`,
-  );
+  const res = await apiFetch(`/manga/search?q=${encodeURIComponent(query)}`);
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
     throw new Error(e.error || "Search failed");
@@ -23,12 +35,12 @@ async function searchManga(query) {
   return (await res.json()).data;
 }
 async function fetchTracked() {
-  const res = await fetch(`${API_BASE}/tracked`);
+  const res = await apiFetch(`/tracked`);
   if (!res.ok) throw new Error("Could not load your list");
   return (await res.json()).data;
 }
 async function addTrackedApi(manga) {
-  const res = await fetch(`${API_BASE}/tracked`, {
+  const res = await apiFetch(`/tracked`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(manga),
@@ -39,16 +51,16 @@ async function addTrackedApi(manga) {
   }
 }
 async function removeTrackedApi(id) {
-  const res = await fetch(`${API_BASE}/tracked/${id}`, { method: "DELETE" });
+  const res = await apiFetch(`/tracked/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Could not remove manga");
 }
 async function getLatestChapter(mangaId) {
-  const res = await fetch(`${API_BASE}/manga/${mangaId}/latest-chapter`);
+  const res = await apiFetch(`/manga/${mangaId}/latest-chapter`);
   if (!res.ok) return null;
   return (await res.json()).data;
 }
 async function updateProgressApi(id, currentChapter) {
-  const res = await fetch(`${API_BASE}/tracked/${id}/progress`, {
+  const res = await apiFetch(`/tracked/${id}/progress`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ currentChapter }),
@@ -56,7 +68,7 @@ async function updateProgressApi(id, currentChapter) {
   if (!res.ok) throw new Error("Could not update progress");
 }
 async function updateReadingStatusApi(id, readingStatus) {
-  const res = await fetch(`${API_BASE}/tracked/${id}/reading-status`, {
+  const res = await apiFetch(`/tracked/${id}/reading-status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ readingStatus }),
