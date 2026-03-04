@@ -3,9 +3,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 
-// Always include the API key header
 async function apiFetch(path, options = {}) {
-  const res = await apiFetch(`${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -87,6 +86,101 @@ async function fetchAllLatestChapters(mangaList) {
   return map;
 }
 
+// ─── Kanji Background ─────────────────────────────────────────────────────────
+// Floating manga kanji drift upward like embers — purely decorative
+const KANJI = [
+  "漫",
+  "画",
+  "章",
+  "新",
+  "読",
+  "本",
+  "物",
+  "語",
+  "力",
+  "夢",
+  "剣",
+  "闘",
+  "血",
+  "炎",
+  "龍",
+];
+
+function KanjiBackground() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    let raf;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    // Each particle: a kanji character drifting upward
+    const particles = Array.from({ length: 35 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      char: KANJI[Math.floor(Math.random() * KANJI.length)],
+      size: Math.random() * 24 + 16, // 16–40px
+      speed: Math.random() * 0.4 + 0.15, // drift speed
+      opacity: Math.random() * 0.25 + 0.15, // bold: 15–40%
+      drift: (Math.random() - 0.5) * 0.3, // slight horizontal sway
+      wobble: Math.random() * Math.PI * 2, // phase offset for sway
+    }));
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p) => {
+        // Sway left/right gently
+        p.wobble += 0.008;
+        p.x += Math.sin(p.wobble) * p.drift;
+        p.y -= p.speed;
+
+        // Reset when drifted off top
+        if (p.y < -40) {
+          p.y = canvas.height + 20;
+          p.x = Math.random() * canvas.width;
+          p.char = KANJI[Math.floor(Math.random() * KANJI.length)];
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = "#e63946";
+        ctx.font = `${p.size}px serif`;
+        ctx.fillText(p.char, p.x, p.y);
+        ctx.restore();
+      });
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
+
 // ─── Chapter Dropdown ─────────────────────────────────────────────────────────
 function ChapterDropdown({ latestChapter, readUrl, mangaboltSlug }) {
   const [open, setOpen] = useState(false);
@@ -102,18 +196,37 @@ function ChapterDropdown({ latestChapter, readUrl, mangaboltSlug }) {
   }, [open]);
 
   const latest = parseInt(latestChapter);
-  // Only generate chapter list when open, capped at 100 most recent chapters
-  const chapters =
-    open && !isNaN(latest)
-      ? Array.from({ length: Math.min(latest, 100) }, (_, i) => latest - i)
-      : [];
+  const chapters = isNaN(latest)
+    ? []
+    : Array.from({ length: latest }, (_, i) => latest - i);
   const chUrl = (num) =>
     `https://mangabolt.com/chapter/${mangaboltSlug}-chapter-${num}/`;
+
+  // Count-up animation
+  const target = parseInt(latestChapter);
+  const [display, setDisplay] = useState(isNaN(target) ? 0 : target);
+
+  useEffect(() => {
+    if (isNaN(target)) return;
+    let current = 0;
+    const steps = Math.min(target, 40);
+    const interval = 600 / steps;
+    const timer = setInterval(() => {
+      current += Math.ceil(target / steps);
+      if (current >= target) {
+        setDisplay(target);
+        clearInterval(timer);
+      } else {
+        setDisplay(current);
+      }
+    }, interval);
+    return () => clearInterval(timer);
+  }, [target]);
 
   return (
     <div className="chapter-dropdown-wrap" ref={ref}>
       <span className="chapter-num">
-        {latestChapter === "?" ? "Ch. ?" : `Ch. ${latestChapter}`}
+        {latestChapter === "?" ? "Ch. ?" : `Ch. ${display}`}
       </span>
       <div className="chapter-row">
         <a
@@ -122,7 +235,7 @@ function ChapterDropdown({ latestChapter, readUrl, mangaboltSlug }) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Read now <span className="chapter-link-arrow">↗</span>
+          Read now ↗
         </a>
         {chapters.length > 0 && (
           <button
@@ -287,48 +400,102 @@ function MangaTile({
 
   return (
     <div
-      className={`manga-tile ${hasUnread || isNew ? "has-unread" : ""} ${isCompleted ? "is-completed" : ""}`}
+      className={`tile-flip-wrap ${confirming ? "is-flipped" : ""} ${hasUnread || isNew ? "has-unread" : ""} ${isCompleted ? "is-completed" : ""}`}
       onMouseLeave={() => setConfirming(false)}
     >
-      <div className="tile-cover">
-        {manga.coverUrl ? (
-          <img src={manga.coverUrl} alt={manga.title} loading="lazy" />
-        ) : (
-          <div className="tile-cover-placeholder">📖</div>
-        )}
-        <div className="tile-status-dot" data-status={manga.status} />
-        {hasUnread && (
-          <div className="tile-unread-badge">+{latest - currentCh}</div>
-        )}
-        {isCompleted && <div className="tile-completed-badge">✓</div>}
-
-        {!confirming && (
-          <button
-            className="tile-delete-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              setConfirming(true);
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+      <div className="tile-flip-inner">
+        {/* ── FRONT ── */}
+        <div className="manga-tile tile-front">
+          <div className="tile-cover">
+            {manga.coverUrl ? (
+              <img src={manga.coverUrl} alt={manga.title} loading="lazy" />
+            ) : (
+              <div className="tile-cover-placeholder">📖</div>
+            )}
+            <div className="tile-status-dot" data-status={manga.status} />
+            {hasUnread && (
+              <div className="tile-unread-badge">+{latest - currentCh}</div>
+            )}
+            {isCompleted && <div className="tile-completed-badge">✓</div>}
+            <button
+              className="tile-delete-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirming(true);
+              }}
             >
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-              <path d="M10 11v6M14 11v6M9 6V4h6v2" />
-            </svg>
-          </button>
-        )}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+              </svg>
+            </button>
+          </div>
+          <div className="tile-info">
+            <p className="tile-title">{manga.title}</p>
+            {!chapter && <span className="tile-chapter-loading">Loading…</span>}
+            {chapter && (
+              <>
+                <ChapterDropdown
+                  latestChapter={chapter.chapter}
+                  readUrl={chapter.readUrl}
+                  mangaboltSlug={chapter.mangaboltSlug}
+                />
+                {!isCompleted && (
+                  <div className="progress-row">
+                    {currentCh > 0 && (
+                      <span className="progress-label">
+                        {hasUnread ? `On ch. ${currentCh}` : "Up to date ✓"}
+                      </span>
+                    )}
+                    {(hasUnread || isNew) && (
+                      <button
+                        className="mark-read-btn"
+                        onClick={markAsRead}
+                        disabled={savingProgress}
+                      >
+                        {savingProgress ? "Saving…" : `Mark ch. ${latest} read`}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {(isCompleted || manga.status === "finished") && (
+                  <button
+                    className="status-toggle-btn"
+                    onClick={toggleStatus}
+                    disabled={savingStatus}
+                  >
+                    {savingStatus
+                      ? "…"
+                      : isCompleted
+                        ? "↩ Move to Reading"
+                        : "✓ Mark Completed"}
+                  </button>
+                )}
+              </>
+            )}
+            {!chapter && <span className="tile-chapter-error">No data</span>}
+          </div>
+        </div>
 
-        {confirming && (
-          <div className="tile-confirm-overlay">
-            <p className="tile-confirm-text">Remove?</p>
-            <div className="tile-confirm-actions">
+        {/* ── BACK ── */}
+        <div className="tile-back">
+          {manga.coverUrl && (
+            <div className="tile-back-blur">
+              <img src={manga.coverUrl} alt="" aria-hidden="true" />
+            </div>
+          )}
+          <div className="tile-back-content">
+            <p className="tile-back-title">{manga.title}</p>
+            <p className="tile-back-question">Remove from list?</p>
+            <div className="tile-back-actions">
               <button
                 className="tile-confirm-yes"
                 onClick={(e) => {
@@ -336,7 +503,7 @@ function MangaTile({
                   onRemove(manga.id);
                 }}
               >
-                Yes
+                Remove
               </button>
               <button
                 className="tile-confirm-no"
@@ -345,59 +512,227 @@ function MangaTile({
                   setConfirming(false);
                 }}
               >
-                No
+                Cancel
               </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="tile-info">
-        <p className="tile-title">{manga.title}</p>
+// ─── Now Reading Ticker ───────────────────────────────────────────────────────
+function NowReadingTicker({ manga }) {
+  if (!manga || manga.length === 0) return null;
 
-        {!chapter && <span className="tile-chapter-loading">Loading…</span>}
+  // Only show reading manga, repeat titles to fill the strip
+  const titles = manga
+    .filter((m) => m.readingStatus !== "completed")
+    .map((m) => m.title.toUpperCase());
 
-        {chapter && (
-          <>
-            <ChapterDropdown
-              latestChapter={chapter.chapter}
-              readUrl={chapter.readUrl}
-              mangaboltSlug={chapter.mangaboltSlug}
-            />
-            {!isCompleted && (
-              <div className="progress-row">
-                {currentCh > 0 && (
-                  <span className="progress-label">
-                    {hasUnread ? `On ch. ${currentCh}` : "Up to date ✓"}
-                  </span>
-                )}
-                {(hasUnread || isNew) && (
-                  <button
-                    className="mark-read-btn"
-                    onClick={markAsRead}
-                    disabled={savingProgress}
-                  >
-                    {savingProgress ? "Saving…" : `Mark ch. ${latest} read`}
-                  </button>
-                )}
+  if (titles.length === 0) return null;
+
+  // Duplicate enough times to ensure seamless loop
+  const repeated = [...titles, ...titles, ...titles];
+  const text = repeated.join("  ·  ");
+
+  return (
+    <div className="ticker-wrap">
+      <div className="ticker-label">NOW READING</div>
+      <div className="ticker-track">
+        <span className="ticker-content">
+          {text}&nbsp;&nbsp;&nbsp;{text}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Notifier Status ──────────────────────────────────────────────────────────
+function NotifierStatus() {
+  const [lastRan, setLastRan] = useState(null);
+
+  useEffect(() => {
+    apiFetch(`/activity/status`)
+      .then((r) => r.json())
+      .then((r) => setLastRan(r.lastRan))
+      .catch(() => {});
+  }, []);
+
+  const getTimeAgo = (iso) => {
+    if (!iso) return "Never";
+    const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+    if (diff < 60) return `${diff} seconds ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    return `${Math.floor(diff / 86400)} days ago`;
+  };
+
+  const isHealthy =
+    lastRan && Date.now() - new Date(lastRan) < 2 * 60 * 60 * 1000; // within 2 hours
+
+  return (
+    <div className="notifier-status">
+      <span className={`notifier-dot ${isHealthy ? "healthy" : "stale"}`} />
+      <span className="notifier-label">
+        Notifier last ran: <strong>{getTimeAgo(lastRan)}</strong>
+      </span>
+    </div>
+  );
+}
+
+// ─── Activity Heatmap ─────────────────────────────────────────────────────────
+function ActivityHeatmap() {
+  const [data, setData] = useState(null);
+  const [tooltip, setTooltip] = useState(null);
+
+  useEffect(() => {
+    apiFetch(`/activity/heatmap`)
+      .then((r) => r.json())
+      .then((r) => setData(r.data || {}))
+      .catch((e) => {
+        console.error("[heatmap]", e);
+        setData({});
+      });
+  }, []);
+
+  const today = new Date();
+  const dayMs = 86400000;
+  const start = new Date(today);
+  start.setDate(start.getDate() - 364);
+  start.setDate(start.getDate() - start.getDay());
+
+  const weeks = [];
+  for (let w = 0; w < 53; w++) {
+    const week = [];
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(start.getTime() + (w * 7 + d) * dayMs);
+      const dateStr = date.toISOString().slice(0, 10);
+      const count = data ? data[dateStr] || 0 : 0;
+      week.push({ dateStr, count, future: date > today });
+    }
+    weeks.push(week);
+  }
+
+  const max = data ? Math.max(...Object.values(data), 1) : 1;
+  const total = data ? Object.values(data).reduce((a, b) => a + b, 0) : 0;
+
+  const getLevel = (count) => {
+    if (!count) return 0;
+    if (count <= max * 0.25) return 1;
+    if (count <= max * 0.5) return 2;
+    if (count <= max * 0.75) return 3;
+    return 4;
+  };
+
+  const months = [];
+  weeks.forEach((week, wi) => {
+    const d = new Date(week[0].dateStr);
+    if (d.getDate() <= 7) {
+      months.push({
+        label: d.toLocaleString("default", { month: "short" }),
+        col: wi,
+      });
+    }
+  });
+
+  return (
+    <div className="heatmap-wrap">
+      <div className="heatmap-header">
+        <span className="heatmap-title">Reading Activity</span>
+        <span className="heatmap-total">
+          {data === null
+            ? "Loading…"
+            : `${total} chapter${total !== 1 ? "s" : ""} marked read in the past year`}
+        </span>
+      </div>
+      <div className="heatmap-scroll">
+        <div className="heatmap-grid-wrap">
+          <div className="heatmap-months">
+            {months.map((m, i) => (
+              <span
+                key={i}
+                className="heatmap-month"
+                style={{ gridColumn: m.col + 1 }}
+              >
+                {m.label}
+              </span>
+            ))}
+          </div>
+          <div className="heatmap-grid">
+            {weeks.map((week, wi) => (
+              <div key={wi} className="heatmap-week">
+                {week.map(({ dateStr, count, future }) => (
+                  <div
+                    key={dateStr}
+                    className={`heatmap-cell level-${future ? "future" : getLevel(count)}`}
+                    onMouseEnter={(e) => {
+                      if (future) return;
+                      const rect = e.target.getBoundingClientRect();
+                      setTooltip({
+                        x: rect.left + rect.width / 2,
+                        y: rect.top - 8,
+                        text:
+                          count === 0
+                            ? `No activity · ${dateStr}`
+                            : `${count} chapter${count > 1 ? "s" : ""} · ${dateStr}`,
+                      });
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
+                  />
+                ))}
               </div>
-            )}
+            ))}
+          </div>
+          <div className="heatmap-legend">
+            <span className="heatmap-legend-label">Less</span>
+            {[0, 1, 2, 3, 4].map((l) => (
+              <div key={l} className={`heatmap-cell level-${l}`} />
+            ))}
+            <span className="heatmap-legend-label">More</span>
+          </div>
+        </div>
+      </div>
+      {tooltip && (
+        <div
+          className="heatmap-tooltip"
+          style={{ left: tooltip.x, top: tooltip.y }}
+        >
+          {tooltip.text}
+        </div>
+      )}
+    </div>
+  );
+}
 
-            <button
-              className="status-toggle-btn"
-              onClick={toggleStatus}
-              disabled={savingStatus}
-            >
-              {savingStatus
-                ? "…"
-                : isCompleted
-                  ? "↩ Move to Reading"
-                  : "✓ Mark Completed"}
-            </button>
-          </>
+// ─── List Filter Bar ──────────────────────────────────────────────────────────
+function ListFilterBar({ query, onChange }) {
+  return (
+    <div className="list-filter-bar">
+      <div className="list-filter-wrap">
+        <svg
+          className="list-filter-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <input
+          type="text"
+          className="list-filter-input"
+          placeholder="Filter your list..."
+          value={query}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {query && (
+          <button className="list-filter-clear" onClick={() => onChange("")}>
+            ✕
+          </button>
         )}
-
-        {!chapter && <span className="tile-chapter-error">No data</span>}
       </div>
     </div>
   );
@@ -421,100 +756,6 @@ function EmptyState({ message, onSwitchToSearch }) {
   );
 }
 
-// ─── Add Manga Modal ──────────────────────────────────────────────────────────
-function AddMangaModal({
-  onClose,
-  onAdd,
-  trackedIds,
-  isSearching,
-  searchError,
-  searchResults,
-  query,
-  setQuery,
-}) {
-  const inputRef = useRef(null);
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  const handleBackdrop = (e) => {
-    if (e.target === e.currentTarget) onClose();
-  };
-
-  return (
-    <div className="modal-backdrop" onClick={handleBackdrop}>
-      <div className="modal">
-        <div className="modal-header">
-          <h2 className="modal-title">Add Manga</h2>
-          <button className="modal-close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
-        <div className="modal-search">
-          <div className="search-input-wrap">
-            <svg
-              className="search-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Search for a manga..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="search-input"
-            />
-            {isSearching && <div className="search-spinner" />}
-          </div>
-        </div>
-        <div className="modal-results">
-          {searchError && <p className="error-msg">{searchError}</p>}
-          {searchResults.length > 0 && (
-            <div className="results-list">
-              {searchResults.map((m) => (
-                <SearchResultCard
-                  key={m.id}
-                  manga={m}
-                  onAdd={(manga) => {
-                    onAdd(manga);
-                    onClose();
-                  }}
-                  isTracked={trackedIds.has(m.id)}
-                />
-              ))}
-            </div>
-          )}
-          {!isSearching &&
-            query &&
-            searchResults.length === 0 &&
-            !searchError && (
-              <p className="no-results">No results for "{query}"</p>
-            )}
-          {!query && (
-            <div className="modal-empty-hint">
-              <p>Search MangaDex to find titles</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [query, setQuery] = useState("");
@@ -522,7 +763,6 @@ export default function App() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
   const [activeTab, setActiveTab] = useState("reading");
-  const [showModal, setShowModal] = useState(false);
   const [trackedManga, setTracked] = useState([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState(null);
@@ -530,6 +770,8 @@ export default function App() {
   const [cachedCount, setCachedCount] = useState(() =>
     parseInt(localStorage.getItem("mangalog_count") || "6"),
   );
+  const [listQuery, setListQuery] = useState("");
+  const [sortBy, setSortBy] = useState("added"); // default: new chapters first
 
   const debouncedQuery = useDebounce(query, 500);
 
@@ -605,99 +847,151 @@ export default function App() {
   };
 
   const trackedIds = new Set(trackedManga.map((m) => m.id));
-  const reading = trackedManga.filter((m) => m.readingStatus !== "completed");
-  const completed = trackedManga.filter((m) => m.readingStatus === "completed");
+  const filterByQuery = (list) => {
+    let result = !listQuery.trim()
+      ? list
+      : list.filter((m) =>
+          m.title.toLowerCase().includes(listQuery.toLowerCase().trim()),
+        );
+
+    switch (sortBy) {
+      case "alpha":
+        return [...result].sort((a, b) => a.title.localeCompare(b.title));
+      case "behind":
+        return [...result].sort((a, b) => {
+          const aGap =
+            (chapterMap[a.id]?.chapter || 0) - (a.currentChapter || 0);
+          const bGap =
+            (chapterMap[b.id]?.chapter || 0) - (b.currentChapter || 0);
+          return bGap - aGap;
+        });
+      case "latest":
+        return [...result].sort(
+          (a, b) =>
+            (chapterMap[b.id]?.chapter || 0) - (chapterMap[a.id]?.chapter || 0),
+        );
+      default: // "new" — unread chapters first, then by title
+        return [...result].sort((a, b) => {
+          const aUnread =
+            (chapterMap[a.id]?.chapter || 0) > (a.currentChapter || 0) ? 1 : 0;
+          const bUnread =
+            (chapterMap[b.id]?.chapter || 0) > (b.currentChapter || 0) ? 1 : 0;
+          if (bUnread !== aUnread) return bUnread - aUnread;
+          return a.title.localeCompare(b.title);
+        });
+    }
+  };
+  const reading = filterByQuery(
+    trackedManga.filter((m) => m.readingStatus !== "completed"),
+  );
+  const completed = filterByQuery(
+    trackedManga.filter((m) => m.readingStatus === "completed"),
+  );
+
+  const SortBar = () => (
+    <div className="list-toolbar">
+      <ListFilterBar query={listQuery} onChange={setListQuery} />
+      <select
+        className="sort-select"
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+      >
+        <option value="added">New Chapters First</option>
+        <option value="alpha">A → Z</option>
+        <option value="behind">Most Behind</option>
+        <option value="latest">Most Chapters</option>
+      </select>
+    </div>
+  );
 
   const renderGrid = (list, emptyMessage, showAddButton) => {
     if (listLoading) {
       return (
-        <div className="tracked-grid">
-          {Array.from({ length: cachedCount }).map((_, i) => (
-            <TileSkeleton key={i} />
-          ))}
-        </div>
+        <>
+          <SortBar />
+          <div className="tracked-grid">
+            {Array.from({ length: cachedCount }).map((_, i) => (
+              <TileSkeleton key={i} />
+            ))}
+          </div>
+        </>
       );
     }
-    if (list.length === 0) {
-      return (
-        <EmptyState
-          message={emptyMessage}
-          onSwitchToSearch={showAddButton ? () => setShowModal(true) : null}
-        />
-      );
-    }
+
+    const noResults = list.length === 0 && listQuery.trim();
+
     return (
-      <div className="tracked-grid">
-        {list.map((m) =>
-          !chapterMap[m.id] ? (
-            <TileSkeleton key={m.id} />
-          ) : (
-            <MangaTile
-              key={m.id}
-              manga={m}
-              chapter={chapterMap[m.id]}
-              onRemove={handleRemove}
-              onProgressUpdate={handleProgressUpdate}
-              onStatusChange={handleStatusChange}
-            />
-          ),
+      <>
+        <SortBar />
+        {noResults ? (
+          <p className="no-results">No manga matching "{listQuery}"</p>
+        ) : list.length === 0 ? (
+          <EmptyState
+            message={emptyMessage}
+            onSwitchToSearch={
+              showAddButton ? () => setActiveTab("search") : null
+            }
+          />
+        ) : (
+          <div className="tracked-grid">
+            {list.map((m) =>
+              !chapterMap[m.id] ? (
+                <TileSkeleton key={m.id} />
+              ) : (
+                <MangaTile
+                  key={m.id}
+                  manga={m}
+                  chapter={chapterMap[m.id]}
+                  onRemove={handleRemove}
+                  onProgressUpdate={handleProgressUpdate}
+                  onStatusChange={handleStatusChange}
+                />
+              ),
+            )}
+          </div>
         )}
-        {/* Add prompt tile */}
-        <button className="add-prompt-tile" onClick={() => setShowModal(true)}>
-          <span className="add-prompt-plus">+</span>
-          <span className="add-prompt-label">Add Manga</span>
-        </button>
-      </div>
+      </>
     );
   };
 
   return (
-    <div className="app">
-      {/* ── Header ── */}
+    <div className="app" style={{ position: "relative", zIndex: 1 }}>
+      <KanjiBackground />
       <header className="header">
-        <div className="logo">
-          <div className="logo-mark">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <path
-                d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+        <div className="header-inner">
+          <div className="logo">
+            <span className="logo-icon">MANGA</span>
+            <div className="logo-divider" />
+            <span className="logo-text">LOG</span>
           </div>
-          <span className="logo-text">
-            MANGA<span className="logo-accent">LOG</span>
-          </span>
-        </div>
-
-        <div className="header-right">
-          <div className="stat-pill">
-            <div className="stat-dot" />
-            <strong>{trackedManga.length}</strong>
-            <span>tracked</span>
+          <div className="header-right">
+            <p className="header-sub">
+              <strong>Your manga shelf</strong>
+              Track every chapter. Miss nothing.
+            </p>
+            {!listLoading && (
+              <div className="header-stats">
+                <span className="header-stat reading">
+                  {reading.length} Reading
+                </span>
+                <span className="header-stat done">
+                  {completed.length} Completed
+                </span>
+              </div>
+            )}
           </div>
-          <button className="add-btn" onClick={() => setShowModal(true)}>
-            + Add Manga
-          </button>
         </div>
       </header>
 
-      {/* ── Tabs ── */}
-      <div className="toolbar">
+      <NowReadingTicker manga={trackedManga} />
+
+      <main className="main">
         <nav className="tabs">
           <button
             className={`tab ${activeTab === "reading" ? "active" : ""}`}
             onClick={() => setActiveTab("reading")}
           >
-            Reading
+            Reading{" "}
             {reading.length > 0 && (
               <span className="tab-count">{reading.length}</span>
             )}
@@ -706,40 +1000,67 @@ export default function App() {
             className={`tab ${activeTab === "completed" ? "active" : ""}`}
             onClick={() => setActiveTab("completed")}
           >
-            Completed
+            Completed{" "}
             {completed.length > 0 && (
               <span className="tab-count">{completed.length}</span>
             )}
           </button>
+          <button
+            className={`tab ${activeTab === "activity" ? "active" : ""}`}
+            onClick={() => setActiveTab("activity")}
+          >
+            Activity
+          </button>
+          <button
+            className={`tab ${activeTab === "search" ? "active" : ""}`}
+            onClick={() => setActiveTab("search")}
+          >
+            + Add Manga
+          </button>
         </nav>
-      </div>
 
-      {/* ── Main ── */}
-      <main className="main">
         {listError && <p className="error-msg">{listError}</p>}
+
         {activeTab === "reading" &&
           renderGrid(reading, "You're not reading anything yet.", true)}
         {activeTab === "completed" &&
           renderGrid(completed, "No completed manga yet.", false)}
-      </main>
+        {activeTab === "activity" && (
+          <>
+            <NotifierStatus />
+            <ActivityHeatmap />
+          </>
+        )}
 
-      {/* ── Modal ── */}
-      {showModal && (
-        <AddMangaModal
-          onClose={() => {
-            setShowModal(false);
-            setQuery("");
-            setResults([]);
-          }}
-          onAdd={handleAdd}
-          trackedIds={trackedIds}
-          isSearching={isSearching}
-          searchError={searchError}
-          searchResults={searchResults}
-          query={query}
-          setQuery={setQuery}
-        />
-      )}
+        {activeTab === "search" && (
+          <section>
+            <SearchBar
+              value={query}
+              onChange={setQuery}
+              isSearching={isSearching}
+            />
+            {searchError && <p className="error-msg">{searchError}</p>}
+            {searchResults.length > 0 && (
+              <div className="results-list">
+                {searchResults.map((m) => (
+                  <SearchResultCard
+                    key={m.id}
+                    manga={m}
+                    onAdd={handleAdd}
+                    isTracked={trackedIds.has(m.id)}
+                  />
+                ))}
+              </div>
+            )}
+            {!isSearching &&
+              query &&
+              searchResults.length === 0 &&
+              !searchError && (
+                <p className="no-results">No results for "{query}"</p>
+              )}
+          </section>
+        )}
+      </main>
     </div>
   );
 }
