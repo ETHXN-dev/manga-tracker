@@ -40,10 +40,11 @@ async function searchManga(query) {
   const params = new URLSearchParams({
     title: query,
     limit: 10,
-    "includes[]": "cover_art",
-    "contentRating[]": ["safe", "suggestive"],
-    "availableTranslatedLanguage[]": "en",
   });
+  params.append("includes[]", "cover_art");
+  params.append("contentRating[]", "safe");
+  params.append("contentRating[]", "suggestive");
+  params.append("availableTranslatedLanguage[]", "en");
   const res = await fetch(`${MANGADEX_BASE}/manga?${params}`);
   if (!res.ok) throw new Error("Search failed");
   const json = await res.json();
