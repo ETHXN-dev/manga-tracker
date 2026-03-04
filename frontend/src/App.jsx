@@ -224,7 +224,7 @@ function ChapterDropdown({ latestChapter, readUrl, mangaboltSlug }) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Read now <span className="chapter-link-arrow">↗</span>
+          Read now ↗
         </a>
         {chapters.length > 0 && (
           <button
@@ -727,7 +727,7 @@ export default function App() {
     parseInt(localStorage.getItem("mangalog_count") || "6"),
   );
   const [listQuery, setListQuery] = useState("");
-  const [sortBy, setSortBy] = useState("added");
+  const [sortBy, setSortBy] = useState("added"); // default: new chapters first
 
   const debouncedQuery = useDebounce(query, 500);
 
@@ -816,18 +816,25 @@ export default function App() {
       case "behind":
         return [...result].sort((a, b) => {
           const aGap =
-            (chapterMap[b.id]?.chapter || 0) - (b.currentChapter || 0);
-          const bGap =
             (chapterMap[a.id]?.chapter || 0) - (a.currentChapter || 0);
-          return aGap - bGap;
+          const bGap =
+            (chapterMap[b.id]?.chapter || 0) - (b.currentChapter || 0);
+          return bGap - aGap;
         });
       case "latest":
         return [...result].sort(
           (a, b) =>
             (chapterMap[b.id]?.chapter || 0) - (chapterMap[a.id]?.chapter || 0),
         );
-      default: // "added" — natural DB order
-        return result;
+      default: // "new" — unread chapters first, then by title
+        return [...result].sort((a, b) => {
+          const aUnread =
+            (chapterMap[a.id]?.chapter || 0) > (a.currentChapter || 0) ? 1 : 0;
+          const bUnread =
+            (chapterMap[b.id]?.chapter || 0) > (b.currentChapter || 0) ? 1 : 0;
+          if (bUnread !== aUnread) return bUnread - aUnread;
+          return a.title.localeCompare(b.title);
+        });
     }
   };
   const reading = filterByQuery(
@@ -845,7 +852,7 @@ export default function App() {
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value)}
       >
-        <option value="added">Recently Added</option>
+        <option value="added">New Chapters First</option>
         <option value="alpha">A → Z</option>
         <option value="behind">Most Behind</option>
         <option value="latest">Most Chapters</option>
