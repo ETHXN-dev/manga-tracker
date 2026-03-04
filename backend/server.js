@@ -22,6 +22,17 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
 app.use(express.json());
+
+// ─── API Key Auth ─────────────────────────────────────────────────────────────
+// All /api routes require X-API-Key header except /api/health
+app.use("/api", (req, res, next) => {
+  if (req.path === "/health") return next();
+  const key = req.headers["x-api-key"];
+  if (!process.env.API_KEY) return next(); // skip auth if not configured
+  if (key !== process.env.API_KEY)
+    return res.status(401).json({ error: "Unauthorized" });
+  next();
+});
 app.use((req, _res, next) => {
   console.log(`${new Date().toISOString()}  ${req.method}  ${req.path}`);
   next();
@@ -176,6 +187,12 @@ app.get("/api/activity/status", async (_req, res) => {
   }
 });
 
+// GET /api/health — lightweight ping for keep-alive
+app.get("/api/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
+
+// GET /api/health — lightweight ping for keep-alive
+app.get("/api/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
+
 app.use((req, res) =>
   res.status(404).json({ error: `${req.method} ${req.path} not found` }),
 );
@@ -197,7 +214,7 @@ if (process.env.NODE_ENV === "production" && process.env.RENDER_EXTERNAL_URL) {
   const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
   setInterval(async () => {
     try {
-      await fetch(`${process.env.RENDER_EXTERNAL_URL}/api/tracked`);
+      await fetch(`${process.env.RENDER_EXTERNAL_URL}/api/health`);
       console.log("[keep-alive] ping sent");
     } catch (err) {
       console.error("[keep-alive] ping failed:", err.message);
