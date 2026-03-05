@@ -1751,44 +1751,169 @@ a {
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+/* Tablet — 768px */
 @media (max-width: 768px) {
   .header {
     padding: 0 20px;
     height: 56px;
   }
+
   .stat-pill {
     display: none;
   }
+
   .toolbar {
     padding: 16px 20px 0;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
   }
+
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    font-size: 11px;
+  }
+
+  .toolbar-right {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+  .search-wrap input {
+    width: 100%;
+  }
+  .search-wrap input:focus {
+    width: 100%;
+  }
+
+  .sort-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .btn-add {
+    flex-shrink: 0;
+  }
+
   .main {
     padding: 0 20px 40px;
   }
+
   .tracked-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
   }
-  .search-wrap input {
-    width: 160px;
-  }
-  .search-wrap input:focus {
-    width: 180px;
-  }
-}
 
-@media (max-width: 480px) {
-  .tracked-grid {
-    grid-template-columns: repeat(2, 1fr);
+  /* Search page full-width */
+  .search-bar {
+    max-width: 100%;
   }
+  .results-list {
+    max-width: 100%;
+  }
+
+  /* Activity tab */
   .heatmap-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.2rem;
+    gap: 4px;
   }
+}
+
+/* Mobile — 480px */
+@media (max-width: 480px) {
+  .header {
+    padding: 0 16px;
+  }
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .toolbar {
+    padding: 14px 16px 0;
+  }
+
+  .tab {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+  .tab-count {
+    display: none;
+  } /* too cramped on small screens */
+
+  .main {
+    padding: 0 16px 40px;
+  }
+
+  .tracked-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  /* Hide sort dropdown on very small screens, keep filter */
+  .sort-select {
+    display: none;
+  }
+
+  /* Stack result cards for readability */
+  .result-card {
+    grid-template-columns: 40px 1fr;
+    grid-template-rows: auto auto;
+  }
+  .track-btn {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 4px;
+  }
+
+  /* Chapter picker opens upward with constrained width */
+  .chapter-picker {
+    width: 160px;
+  }
+
+  /* Heatmap */
   .heatmap-total {
     display: none;
+  }
+
+  /* Ticker slightly taller for touch */
+  .ticker-wrap {
+    height: 28px;
+  }
+}
+
+/* Very small — 360px (e.g. Galaxy A series) */
+@media (max-width: 360px) {
+  .tracked-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .tile-info {
+    padding: 8px;
+    gap: 6px;
+  }
+  .tile-title {
+    font-size: 12px;
+  }
+  .btn-read {
+    font-size: 10px;
+    padding: 7px 6px;
   }
 }
