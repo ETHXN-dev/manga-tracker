@@ -271,12 +271,23 @@ const MangaTile = memo(function MangaTile({
   onRemove,
   onProgressUpdate,
   onStatusChange,
+  justAdded,
 }) {
   const [confirming, setConfirming] = useState(false);
   const [currentCh, setCurrentCh] = useState(manga.currentChapter || 0);
   const [savingProgress, setSaving] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   const isCompleted = manga.readingStatus === "completed";
+  const wrapRef = useRef(null);
+  const longPressTimer = useRef(null);
+
+  // Long-press to trigger delete on touch devices
+  const handleTouchStart = useCallback(() => {
+    longPressTimer.current = setTimeout(() => setConfirming(true), 600);
+  }, []);
+  const handleTouchEnd = useCallback(() => {
+    clearTimeout(longPressTimer.current);
+  }, []);
 
   const latest = chapter ? parseInt(chapter.chapter) : 0;
   const hasUnread =
@@ -329,8 +340,12 @@ const MangaTile = memo(function MangaTile({
 
   return (
     <div
-      className={`tile-flip-wrap ${confirming ? "is-flipped" : ""} ${hasUnread || isNew ? "has-unread" : ""} ${isCompleted ? "is-completed" : ""}`}
+      ref={wrapRef}
+      className={`tile-flip-wrap ${confirming ? "is-flipped" : ""} ${hasUnread || isNew ? "has-unread" : ""} ${isCompleted ? "is-completed" : ""} ${justAdded ? "is-new" : ""}`}
       onMouseLeave={() => setConfirming(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchEnd}
     >
       <div className="tile-flip-inner">
         {/* ── FRONT ── */}
@@ -503,6 +518,7 @@ const ChapterDropdownToggle = memo(function ChapterDropdownToggle({
   mangaboltSlug,
 }) {
   const [open, setOpen] = useState(false);
+  const [opensDown, setOpensDown] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -514,10 +530,21 @@ const ChapterDropdownToggle = memo(function ChapterDropdownToggle({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  const handleToggle = useCallback((e) => {
+    e.stopPropagation();
+    setOpen((o) => {
+      if (!o && ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        // If less than 220px above the button, open downward
+        setOpensDown(rect.top < 220);
+      }
+      return !o;
+    });
+  }, []);
+
   const latest = parseInt(latestChapter);
   if (isNaN(latest) || latest < 1) return null;
 
-  // Show last 50 chapters max
   const chapters = Array.from(
     { length: Math.min(latest, 50) },
     (_, i) => latest - i,
@@ -529,10 +556,7 @@ const ChapterDropdownToggle = memo(function ChapterDropdownToggle({
     <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
       <button
         className={`btn-chapter-toggle ${open ? "open" : ""}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((o) => !o);
-        }}
+        onClick={handleToggle}
         title="Browse chapters"
       >
         <svg
@@ -548,7 +572,7 @@ const ChapterDropdownToggle = memo(function ChapterDropdownToggle({
       </button>
 
       {open && (
-        <div className="chapter-picker">
+        <div className={`chapter-picker ${opensDown ? "opens-down" : ""}`}>
           <div className="chapter-picker-header">
             <span>All Chapters</span>
             <span className="chapter-picker-count">{latest} total</span>
@@ -773,24 +797,37 @@ function EmptyState({ message, onSwitchToSearch }) {
 }
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
-function Toast({ message, onDone }) {
+function Toast({ message, type = "error", onDone }) {
   useEffect(() => {
     const t = setTimeout(onDone, 3000);
     return () => clearTimeout(t);
   }, [onDone]);
   return (
-    <div className="toast">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
+    <div className={`toast toast-${type}`}>
+      {type === "success" ? (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      )}
       {message}
     </div>
   );
@@ -813,8 +850,29 @@ export default function App() {
   const [listQuery, setListQuery] = useState("");
   const [sortBy, setSortBy] = useState("added");
   const [toast, setToast] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [recentlyAdded, setRecentlyAdded] = useState(null); // id of just-added manga
 
-  const showToast = useCallback((msg) => setToast(msg), []);
+  const showToast = useCallback(
+    (msg, type = "error") => setToast({ msg, type }),
+    [],
+  );
+
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      const list = await fetchTracked();
+      setTracked(list);
+      const map = await fetchAllLatestChapters(list);
+      setChapterMap(map);
+      showToast("Chapters refreshed", "success");
+    } catch {
+      showToast("Refresh failed");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isRefreshing, showToast]);
 
   const debouncedQuery = useDebounce(query, 500);
 
@@ -852,21 +910,27 @@ export default function App() {
     performSearch(debouncedQuery);
   }, [debouncedQuery, performSearch]);
 
-  const handleAdd = useCallback(async (manga) => {
-    try {
-      await addTrackedApi(manga);
-      setTracked((p) => [{ ...manga, readingStatus: "reading" }, ...p]);
-      setActiveTab("reading");
-      getLatestChapter(manga.id).then(async (ch) => {
-        if (ch) {
-          setChapterMap((prev) => ({ ...prev, [manga.id]: ch }));
-          await updateProgressApi(manga.id, ch.chapter);
-        }
-      });
-    } catch (e) {
-      showToast(e.message || "Could not add manga");
-    }
-  }, []);
+  const handleAdd = useCallback(
+    async (manga) => {
+      try {
+        await addTrackedApi(manga);
+        setTracked((p) => [{ ...manga, readingStatus: "reading" }, ...p]);
+        setRecentlyAdded(manga.id);
+        setTimeout(() => setRecentlyAdded(null), 2000);
+        setActiveTab("reading");
+        showToast(`"${manga.title}" added`, "success");
+        getLatestChapter(manga.id).then(async (ch) => {
+          if (ch) {
+            setChapterMap((prev) => ({ ...prev, [manga.id]: ch }));
+            await updateProgressApi(manga.id, ch.chapter);
+          }
+        });
+      } catch (e) {
+        showToast(e.message || "Could not add manga");
+      }
+    },
+    [showToast],
+  );
 
   const handleRemove = useCallback(
     async (id) => {
@@ -950,7 +1014,12 @@ export default function App() {
     };
   }, [trackedManga, chapterMap, listQuery, sortBy]);
 
-  const renderGrid = (list, emptyMessage, showAddButton) => {
+  const renderGrid = (
+    list,
+    emptyMessage,
+    showAddButton,
+    recentlyAddedId = null,
+  ) => {
     if (listLoading) {
       return (
         <div className="tracked-grid">
@@ -980,6 +1049,7 @@ export default function App() {
             onRemove={handleRemove}
             onProgressUpdate={handleProgressUpdate}
             onStatusChange={handleStatusChange}
+            justAdded={m.id === recentlyAddedId}
           />
         ))}
         {showAddButton && (
@@ -1003,7 +1073,13 @@ export default function App() {
   return (
     <div className="app" style={{ position: "relative", zIndex: 1 }}>
       <KanjiBackground />
-      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      {toast && (
+        <Toast
+          message={toast.msg}
+          type={toast.type}
+          onDone={() => setToast(null)}
+        />
+      )}
 
       {/* ── HEADER ── */}
       <header className="header">
@@ -1113,6 +1189,25 @@ export default function App() {
               </svg>
               Add
             </button>
+            <button
+              className={`btn-refresh ${isRefreshing ? "spinning" : ""}`}
+              onClick={handleRefresh}
+              title="Refresh chapters"
+              disabled={isRefreshing}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0114.36-3.36L23 10M1 14l5.13 4.36A9 9 0 0020.49 15" />
+              </svg>
+            </button>
           </div>
         )}
       </div>
@@ -1123,9 +1218,14 @@ export default function App() {
           {listError && <p className="error-msg">{listError}</p>}
 
           {activeTab === "reading" &&
-            renderGrid(reading, "You're not reading anything yet.", true)}
+            renderGrid(
+              reading,
+              "You're not reading anything yet.",
+              true,
+              recentlyAdded,
+            )}
           {activeTab === "completed" &&
-            renderGrid(completed, "No completed manga yet.", false)}
+            renderGrid(completed, "No completed manga yet.", false, null)}
 
           {activeTab === "activity" && (
             <>

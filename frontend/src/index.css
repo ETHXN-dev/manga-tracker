@@ -1964,3 +1964,101 @@ a {
   stroke: var(--accent);
   flex-shrink: 0;
 }
+
+/* ─── Refresh Button ─────────────────────────────────────────────────────────── */
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    background 0.18s,
+    transform 0.15s var(--ease-spring);
+  flex-shrink: 0;
+}
+.btn-refresh:hover {
+  border-color: var(--accent);
+  background: var(--surface-3);
+  transform: translateY(-1px);
+}
+.btn-refresh:active {
+  transform: scale(0.93);
+}
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+.btn-refresh svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-muted);
+  transition: stroke 0.18s;
+}
+.btn-refresh:hover svg {
+  stroke: var(--accent);
+}
+
+@keyframes spinOnce {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.btn-refresh.spinning svg {
+  animation: spinOnce 0.7s var(--ease-out) infinite;
+  stroke: var(--accent);
+}
+
+/* ─── Newly Added Card Highlight ─────────────────────────────────────────────── */
+@keyframes newCardPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(232, 48, 42, 0.5);
+    border-color: var(--accent);
+  }
+  60% {
+    box-shadow: 0 0 0 8px rgba(232, 48, 42, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(232, 48, 42, 0);
+  }
+}
+.tile-flip-wrap.is-new {
+  animation:
+    tileIn 0.45s var(--ease-out) both,
+    newCardPulse 1.2s ease-out 0.3s 1;
+}
+
+/* ─── Toast types ────────────────────────────────────────────────────────────── */
+.toast-success {
+  border-color: rgba(74, 222, 128, 0.4);
+}
+.toast-success svg {
+  stroke: var(--green);
+}
+
+/* ─── Chapter Picker — opens downward variant ────────────────────────────────── */
+.chapter-picker.opens-down {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+/* ─── Mobile delete hint ─────────────────────────────────────────────────────── */
+@media (hover: none) {
+  /* On touch devices, always show the delete button faintly */
+  .tile-delete-btn {
+    opacity: 0.5;
+  }
+  /* Long-press visual feedback — scale the card slightly */
+  .tile-flip-wrap:active {
+    transform: scale(0.98);
+  }
+}
