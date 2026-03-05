@@ -173,93 +173,6 @@ function KanjiBackground() {
   );
 }
 
-// ─── Chapter Dropdown ─────────────────────────────────────────────────────────
-function ChapterDropdown({ latestChapter, readUrl, mangaboltSlug }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
-
-  const latest = parseInt(latestChapter);
-  const chapters = isNaN(latest)
-    ? []
-    : Array.from({ length: latest }, (_, i) => latest - i);
-  const chUrl = (num) =>
-    `https://mangabolt.com/chapter/${mangaboltSlug}-chapter-${num}/`;
-
-  const target = parseInt(latestChapter);
-  const [display, setDisplay] = useState(isNaN(target) ? 0 : target);
-
-  useEffect(() => {
-    if (isNaN(target)) return;
-    let current = 0;
-    const steps = Math.min(target, 40);
-    const interval = 600 / steps;
-    const timer = setInterval(() => {
-      current += Math.ceil(target / steps);
-      if (current >= target) {
-        setDisplay(target);
-        clearInterval(timer);
-      } else {
-        setDisplay(current);
-      }
-    }, interval);
-    return () => clearInterval(timer);
-  }, [target]);
-
-  return (
-    <div className="chapter-dropdown-wrap" ref={ref}>
-      <span className="chapter-num">
-        {latestChapter === "?" ? "Ch. ?" : `Ch. ${display}`}
-      </span>
-      <div className="chapter-row">
-        <a
-          className="chapter-link"
-          href={readUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Read now ↗
-        </a>
-        {chapters.length > 0 && (
-          <button
-            className={`chapter-toggle ${open ? "open" : ""}`}
-            onClick={() => setOpen((o) => !o)}
-          >
-            ▾
-          </button>
-        )}
-      </div>
-      {open && (
-        <div className="chapter-list">
-          {chapters.map((num) => (
-            <a
-              key={num}
-              className="chapter-list-item"
-              href={chUrl(num)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
-            >
-              <span>Ch. {num}</span>
-              {num === latest && (
-                <span className="chapter-list-badge">Latest</span>
-              )}
-            </a>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Search Bar (Search tab) ───────────────────────────────────────────────────
 function SearchBar({ value, onChange, isSearching }) {
   return (
@@ -841,38 +754,6 @@ function ActivityHeatmap() {
   );
 }
 
-// ─── List Filter Bar ──────────────────────────────────────────────────────────
-function ListFilterBar({ query, onChange }) {
-  return (
-    <div className="list-filter-bar">
-      <div className="list-filter-wrap">
-        <svg
-          className="list-filter-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-        <input
-          type="text"
-          className="list-filter-input"
-          placeholder="Filter your list..."
-          value={query}
-          onChange={(e) => onChange(e.target.value)}
-        />
-        {query && (
-          <button className="list-filter-clear" onClick={() => onChange("")}>
-            ✕
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ─── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ message, onSwitchToSearch }) {
   return (
@@ -891,29 +772,29 @@ function EmptyState({ message, onSwitchToSearch }) {
   );
 }
 
-// ─── Sort Bar (stable component, defined outside App) ─────────────────────────
-const SortBar = memo(function SortBar({
-  listQuery,
-  onQueryChange,
-  sortBy,
-  onSortChange,
-}) {
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function Toast({ message, onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 3000);
+    return () => clearTimeout(t);
+  }, [onDone]);
   return (
-    <div className="list-toolbar">
-      <ListFilterBar query={listQuery} onChange={onQueryChange} />
-      <select
-        className="sort-select"
-        value={sortBy}
-        onChange={(e) => onSortChange(e.target.value)}
+    <div className="toast">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
       >
-        <option value="added">New Chapters First</option>
-        <option value="alpha">A → Z</option>
-        <option value="behind">Most Behind</option>
-        <option value="latest">Most Chapters</option>
-      </select>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      {message}
     </div>
   );
-});
+}
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
@@ -931,6 +812,9 @@ export default function App() {
   );
   const [listQuery, setListQuery] = useState("");
   const [sortBy, setSortBy] = useState("added");
+  const [toast, setToast] = useState(null);
+
+  const showToast = useCallback((msg) => setToast(msg), []);
 
   const debouncedQuery = useDebounce(query, 500);
 
@@ -980,7 +864,7 @@ export default function App() {
         }
       });
     } catch (e) {
-      alert(e.message);
+      showToast(e.message || "Could not add manga");
     }
   }, []);
 
@@ -1119,6 +1003,7 @@ export default function App() {
   return (
     <div className="app" style={{ position: "relative", zIndex: 1 }}>
       <KanjiBackground />
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
 
       {/* ── HEADER ── */}
       <header className="header">
