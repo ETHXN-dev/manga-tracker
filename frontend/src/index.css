@@ -353,6 +353,7 @@ a {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
   align-items: start;
+  contain: layout;
 }
 
 /* Staggered entrance for first 8 cards */
@@ -501,6 +502,7 @@ a {
   overflow: hidden;
   background: var(--surface-2);
   flex-shrink: 0;
+  contain: layout style;
 }
 
 .tile-cover img {

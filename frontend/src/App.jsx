@@ -386,13 +386,15 @@ const MangaTile = memo(function MangaTile({
 
   const markAsRead = async () => {
     if (!chapter || savingProgress) return;
+    const prev = currentCh;
+    setCurrentCh(latest); // optimistic
+    onProgressUpdate(manga.id, latest);
     setSaving(true);
     try {
       await updateProgressApi(manga.id, latest);
-      setCurrentCh(latest);
-      onProgressUpdate(manga.id, latest);
     } catch {
-      /* silent */
+      setCurrentCh(prev); // rollback
+      onProgressUpdate(manga.id, prev);
     } finally {
       setSaving(false);
     }
@@ -400,13 +402,13 @@ const MangaTile = memo(function MangaTile({
 
   const toggleStatus = async () => {
     if (savingStatus) return;
-    setSavingStatus(true);
     const newStatus = isCompleted ? "reading" : "completed";
+    onStatusChange(manga.id, newStatus); // optimistic
+    setSavingStatus(true);
     try {
       await updateReadingStatusApi(manga.id, newStatus);
-      onStatusChange(manga.id, newStatus);
     } catch {
-      /* silent */
+      onStatusChange(manga.id, isCompleted ? "completed" : "reading"); // rollback
     } finally {
       setSavingStatus(false);
     }
@@ -982,14 +984,18 @@ export default function App() {
     }
   }, []);
 
-  const handleRemove = useCallback(async (id) => {
-    try {
-      await removeTrackedApi(id);
-      setTracked((p) => p.filter((m) => m.id !== id));
-    } catch (e) {
-      alert(e.message);
-    }
-  }, []);
+  const handleRemove = useCallback(
+    async (id) => {
+      const prev = trackedManga; // capture for rollback via ref would be cleaner, but this works
+      setTracked((p) => p.filter((m) => m.id !== id)); // optimistic
+      try {
+        await removeTrackedApi(id);
+      } catch {
+        setTracked(prev); // rollback
+      }
+    },
+    [trackedManga],
+  );
 
   const handleProgressUpdate = useCallback((id, currentChapter) => {
     setTracked((p) =>
