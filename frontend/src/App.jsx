@@ -381,7 +381,7 @@ const MangaTile = memo(function MangaTile({
     statusBadgeLabel = "New Ch.";
   } else if (chapter && !isNaN(latest)) {
     statusBadgeClass = "status-uptodate";
-    statusBadgeLabel = "Up to date";
+    statusBadgeLabel = "✓ Current";
   }
 
   const markAsRead = async () => {
@@ -1069,70 +1069,50 @@ export default function App() {
   const renderGrid = (list, emptyMessage, showAddButton) => {
     if (listLoading) {
       return (
-        <>
-          <SortBar
-            listQuery={listQuery}
-            onQueryChange={setListQuery}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-          />
-          <div className="tracked-grid">
-            {Array.from({ length: cachedCount }).map((_, i) => (
-              <TileSkeleton key={i} />
-            ))}
-          </div>
-        </>
+        <div className="tracked-grid">
+          {Array.from({ length: cachedCount }).map((_, i) => (
+            <TileSkeleton key={i} />
+          ))}
+        </div>
       );
     }
 
     const noResults = list.length === 0 && listQuery.trim();
 
-    return (
-      <>
-        <SortBar
-          listQuery={listQuery}
-          onQueryChange={setListQuery}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-        />
-        {noResults ? (
-          <p className="no-results">No manga matching "{listQuery}"</p>
-        ) : list.length === 0 ? (
-          <EmptyState
-            message={emptyMessage}
-            onSwitchToSearch={
-              showAddButton ? () => setActiveTab("search") : null
-            }
+    return noResults ? (
+      <p className="no-results">No manga matching "{listQuery}"</p>
+    ) : list.length === 0 ? (
+      <EmptyState
+        message={emptyMessage}
+        onSwitchToSearch={showAddButton ? () => setActiveTab("search") : null}
+      />
+    ) : (
+      <div className="tracked-grid">
+        {list.map((m) => (
+          <MangaTile
+            key={m.id}
+            manga={m}
+            chapter={chapterMap[m.id] || null}
+            onRemove={handleRemove}
+            onProgressUpdate={handleProgressUpdate}
+            onStatusChange={handleStatusChange}
           />
-        ) : (
-          <div className="tracked-grid">
-            {list.map((m) => (
-              <MangaTile
-                key={m.id}
-                manga={m}
-                chapter={chapterMap[m.id] || null}
-                onRemove={handleRemove}
-                onProgressUpdate={handleProgressUpdate}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
-            {showAddButton && (
-              <div className="card-add" onClick={() => setActiveTab("search")}>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                <span>Add Manga</span>
-              </div>
-            )}
+        ))}
+        {showAddButton && (
+          <div className="card-add" onClick={() => setActiveTab("search")}>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>Add Manga</span>
           </div>
         )}
-      </>
+      </div>
     );
   };
 
@@ -1155,15 +1135,8 @@ export default function App() {
           </span>
         </div>
 
-        {/* Right side */}
-        <div className="header-right">
-          {!listLoading && (
-            <div className="stat-pill">
-              <div className="dot" />
-              <strong>{reading.length}</strong> Reading
-            </div>
-          )}
-        </div>
+        {/* Right side — empty, stat pill moved to toolbar */}
+        <div className="header-right" />
       </header>
 
       {/* Ticker */}
@@ -1204,6 +1177,14 @@ export default function App() {
             + Add Manga
           </button>
         </nav>
+
+        {/* Stat pill — sits between tabs and controls */}
+        {!listLoading && (
+          <div className="stat-pill">
+            <div className="dot" />
+            <strong>{reading.length}</strong> Reading
+          </div>
+        )}
 
         {/* Right controls — search + sort (only on grid tabs) */}
         {(activeTab === "reading" || activeTab === "completed") && (
