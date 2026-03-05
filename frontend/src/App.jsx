@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from "react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
@@ -131,8 +131,14 @@ function KanjiBackground() {
       wobble: Math.random() * Math.PI * 2,
     }));
 
+    particles.forEach((p) => {
+      p.font = `${p.size}px serif`;
+    });
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#e8302a";
+      let lastFont = "";
       particles.forEach((p) => {
         p.wobble += 0.008;
         p.x += Math.sin(p.wobble) * p.drift;
@@ -142,12 +148,12 @@ function KanjiBackground() {
           p.x = Math.random() * canvas.width;
           p.char = KANJI[Math.floor(Math.random() * KANJI.length)];
         }
-        ctx.save();
         ctx.globalAlpha = p.opacity;
-        ctx.fillStyle = "#e8302a";
-        ctx.font = `${p.size}px serif`;
+        if (p.font !== lastFont) {
+          ctx.font = p.font;
+          lastFont = p.font;
+        }
         ctx.fillText(p.char, p.x, p.y);
-        ctx.restore();
       });
       raf = requestAnimationFrame(draw);
     };
@@ -284,12 +290,21 @@ function SearchBar({ value, onChange, isSearching }) {
 }
 
 // ─── Search Result Card ───────────────────────────────────────────────────────
-function SearchResultCard({ manga, onAdd, isTracked }) {
+const SearchResultCard = memo(function SearchResultCard({
+  manga,
+  onAdd,
+  isTracked,
+}) {
   return (
     <div className={`result-card ${isTracked ? "is-tracked" : ""}`}>
       <div className="result-cover">
         {manga.coverUrl ? (
-          <img src={manga.coverUrl} alt={manga.title} loading="lazy" />
+          <img
+            src={manga.coverUrl}
+            alt={manga.title}
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <div className="cover-placeholder">?</div>
         )}
@@ -317,7 +332,7 @@ function SearchResultCard({ manga, onAdd, isTracked }) {
       </button>
     </div>
   );
-}
+});
 
 // ─── Tile Skeleton ────────────────────────────────────────────────────────────
 function TileSkeleton() {
@@ -337,7 +352,7 @@ function TileSkeleton() {
 }
 
 // ─── Manga Tile ───────────────────────────────────────────────────────────────
-function MangaTile({
+const MangaTile = memo(function MangaTile({
   manga,
   chapter,
   onRemove,
@@ -408,7 +423,12 @@ function MangaTile({
           {/* Cover */}
           <div className="tile-cover">
             {manga.coverUrl ? (
-              <img src={manga.coverUrl} alt={manga.title} loading="lazy" />
+              <img
+                src={manga.coverUrl}
+                alt={manga.title}
+                loading="lazy"
+                decoding="async"
+              />
             ) : (
               <div className="tile-cover-placeholder">📖</div>
             )}
@@ -560,10 +580,13 @@ function MangaTile({
       </div>
     </div>
   );
-}
+});
 
 // Small chapter list dropdown — ▾ button opens a scrollable chapter picker
-function ChapterDropdownToggle({ latestChapter, mangaboltSlug }) {
+const ChapterDropdownToggle = memo(function ChapterDropdownToggle({
+  latestChapter,
+  mangaboltSlug,
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -636,7 +659,7 @@ function ChapterDropdownToggle({ latestChapter, mangaboltSlug }) {
       )}
     </div>
   );
-}
+});
 
 // ─── Now Reading Ticker ───────────────────────────────────────────────────────
 function NowReadingTicker({ manga }) {
@@ -866,6 +889,30 @@ function EmptyState({ message, onSwitchToSearch }) {
   );
 }
 
+// ─── Sort Bar (stable component, defined outside App) ─────────────────────────
+const SortBar = memo(function SortBar({
+  listQuery,
+  onQueryChange,
+  sortBy,
+  onSortChange,
+}) {
+  return (
+    <div className="list-toolbar">
+      <ListFilterBar query={listQuery} onChange={onQueryChange} />
+      <select
+        className="sort-select"
+        value={sortBy}
+        onChange={(e) => onSortChange(e.target.value)}
+      >
+        <option value="added">New Chapters First</option>
+        <option value="alpha">A → Z</option>
+        <option value="behind">Most Behind</option>
+        <option value="latest">Most Chapters</option>
+      </select>
+    </div>
+  );
+});
+
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [query, setQuery] = useState("");
@@ -919,7 +966,7 @@ export default function App() {
     performSearch(debouncedQuery);
   }, [debouncedQuery, performSearch]);
 
-  const handleAdd = async (manga) => {
+  const handleAdd = useCallback(async (manga) => {
     try {
       await addTrackedApi(manga);
       setTracked((p) => [{ ...manga, readingStatus: "reading" }, ...p]);
@@ -933,94 +980,96 @@ export default function App() {
     } catch (e) {
       alert(e.message);
     }
-  };
+  }, []);
 
-  const handleRemove = async (id) => {
+  const handleRemove = useCallback(async (id) => {
     try {
       await removeTrackedApi(id);
       setTracked((p) => p.filter((m) => m.id !== id));
     } catch (e) {
       alert(e.message);
     }
-  };
+  }, []);
 
-  const handleProgressUpdate = (id, currentChapter) => {
+  const handleProgressUpdate = useCallback((id, currentChapter) => {
     setTracked((p) =>
       p.map((m) => (m.id === id ? { ...m, currentChapter } : m)),
     );
-  };
+  }, []);
 
-  const handleStatusChange = (id, readingStatus) => {
+  const handleStatusChange = useCallback((id, readingStatus) => {
     setTracked((p) =>
       p.map((m) => (m.id === id ? { ...m, readingStatus } : m)),
     );
-  };
+  }, []);
 
-  const trackedIds = new Set(trackedManga.map((m) => m.id));
-
-  const filterByQuery = (list) => {
-    let result = !listQuery.trim()
-      ? list
-      : list.filter((m) =>
-          m.title.toLowerCase().includes(listQuery.toLowerCase().trim()),
-        );
-
-    switch (sortBy) {
-      case "alpha":
-        return [...result].sort((a, b) => a.title.localeCompare(b.title));
-      case "behind":
-        return [...result].sort((a, b) => {
-          const aGap =
-            (chapterMap[a.id]?.chapter || 0) - (a.currentChapter || 0);
-          const bGap =
-            (chapterMap[b.id]?.chapter || 0) - (b.currentChapter || 0);
-          return bGap - aGap;
-        });
-      case "latest":
-        return [...result].sort(
-          (a, b) =>
-            (chapterMap[b.id]?.chapter || 0) - (chapterMap[a.id]?.chapter || 0),
-        );
-      default:
-        return [...result].sort((a, b) => {
-          const aUnread =
-            (chapterMap[a.id]?.chapter || 0) > (a.currentChapter || 0) ? 1 : 0;
-          const bUnread =
-            (chapterMap[b.id]?.chapter || 0) > (b.currentChapter || 0) ? 1 : 0;
-          if (bUnread !== aUnread) return bUnread - aUnread;
-          return a.title.localeCompare(b.title);
-        });
-    }
-  };
-
-  const reading = filterByQuery(
-    trackedManga.filter((m) => m.readingStatus !== "completed"),
-  );
-  const completed = filterByQuery(
-    trackedManga.filter((m) => m.readingStatus === "completed"),
+  // Memoize expensive derived state
+  const trackedIds = useMemo(
+    () => new Set(trackedManga.map((m) => m.id)),
+    [trackedManga],
   );
 
-  const SortBar = () => (
-    <div className="list-toolbar">
-      <ListFilterBar query={listQuery} onChange={setListQuery} />
-      <select
-        className="sort-select"
-        value={sortBy}
-        onChange={(e) => setSortBy(e.target.value)}
-      >
-        <option value="added">New Chapters First</option>
-        <option value="alpha">A → Z</option>
-        <option value="behind">Most Behind</option>
-        <option value="latest">Most Chapters</option>
-      </select>
-    </div>
-  );
+  const { reading, completed } = useMemo(() => {
+    const applySort = (list) => {
+      let result = !listQuery.trim()
+        ? list
+        : list.filter((m) =>
+            m.title.toLowerCase().includes(listQuery.toLowerCase().trim()),
+          );
+
+      switch (sortBy) {
+        case "alpha":
+          return [...result].sort((a, b) => a.title.localeCompare(b.title));
+        case "behind":
+          return [...result].sort((a, b) => {
+            const aGap =
+              (chapterMap[a.id]?.chapter || 0) - (a.currentChapter || 0);
+            const bGap =
+              (chapterMap[b.id]?.chapter || 0) - (b.currentChapter || 0);
+            return bGap - aGap;
+          });
+        case "latest":
+          return [...result].sort(
+            (a, b) =>
+              (chapterMap[b.id]?.chapter || 0) -
+              (chapterMap[a.id]?.chapter || 0),
+          );
+        default:
+          return [...result].sort((a, b) => {
+            const aUnread =
+              (chapterMap[a.id]?.chapter || 0) > (a.currentChapter || 0)
+                ? 1
+                : 0;
+            const bUnread =
+              (chapterMap[b.id]?.chapter || 0) > (b.currentChapter || 0)
+                ? 1
+                : 0;
+            if (bUnread !== aUnread) return bUnread - aUnread;
+            return a.title.localeCompare(b.title);
+          });
+      }
+    };
+
+    return {
+      reading: applySort(
+        trackedManga.filter((m) => m.readingStatus !== "completed"),
+      ),
+      completed: applySort(
+        trackedManga.filter((m) => m.readingStatus === "completed"),
+      ),
+    };
+  }, [trackedManga, chapterMap, listQuery, sortBy]);
 
   const renderGrid = (list, emptyMessage, showAddButton) => {
     if (listLoading) {
       return (
         <>
-          <SortBar />
+          <SortBar
+            listQuery={listQuery}
+            onQueryChange={setListQuery}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+          />
           <div className="tracked-grid">
             {Array.from({ length: cachedCount }).map((_, i) => (
               <TileSkeleton key={i} />
@@ -1034,7 +1083,12 @@ export default function App() {
 
     return (
       <>
-        <SortBar />
+        <SortBar
+          listQuery={listQuery}
+          onQueryChange={setListQuery}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+        />
         {noResults ? (
           <p className="no-results">No manga matching "{listQuery}"</p>
         ) : list.length === 0 ? (
@@ -1046,21 +1100,16 @@ export default function App() {
           />
         ) : (
           <div className="tracked-grid">
-            {list.map((m) =>
-              !chapterMap[m.id] ? (
-                <TileSkeleton key={m.id} />
-              ) : (
-                <MangaTile
-                  key={m.id}
-                  manga={m}
-                  chapter={chapterMap[m.id]}
-                  onRemove={handleRemove}
-                  onProgressUpdate={handleProgressUpdate}
-                  onStatusChange={handleStatusChange}
-                />
-              ),
-            )}
-            {/* Add card */}
+            {list.map((m) => (
+              <MangaTile
+                key={m.id}
+                manga={m}
+                chapter={chapterMap[m.id] || null}
+                onRemove={handleRemove}
+                onProgressUpdate={handleProgressUpdate}
+                onStatusChange={handleStatusChange}
+              />
+            ))}
             {showAddButton && (
               <div className="card-add" onClick={() => setActiveTab("search")}>
                 <svg
