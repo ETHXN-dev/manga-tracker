@@ -562,10 +562,7 @@ const ChapterDropdownToggle = memo(function ChapterDropdownToggle({
   const latest = parseInt(latestChapter);
   if (isNaN(latest) || latest < 1) return null;
 
-  const chapters = Array.from(
-    { length: Math.min(latest, 50) },
-    (_, i) => latest - i,
-  );
+  const chapters = Array.from({ length: latest }, (_, i) => latest - i);
   const chUrl = (num) =>
     `https://mangabolt.com/chapter/${mangaboltSlug}-chapter-${num}/`;
 
