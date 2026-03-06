@@ -758,12 +758,21 @@ function ActivityHeatmap() {
                       const rect = e.target.getBoundingClientRect();
                       setTooltip({
                         x: rect.left + rect.width / 2,
-                        y: rect.top - 8,
+                        y: rect.top,
                         text:
                           count === 0
                             ? `No activity · ${dateStr}`
                             : `${count} chapter${count > 1 ? "s" : ""} · ${dateStr}`,
                       });
+                    }}
+                    onMouseMove={(e) => {
+                      if (future || !tooltip) return;
+                      const rect = e.target.getBoundingClientRect();
+                      setTooltip((t) =>
+                        t
+                          ? { ...t, x: rect.left + rect.width / 2, y: rect.top }
+                          : null,
+                      );
                     }}
                     onMouseLeave={() => setTooltip(null)}
                   />
