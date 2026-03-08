@@ -33,8 +33,8 @@ async function sendPushNotification(updates) {
 
   const title =
     updates.length === 1
-      ? `📚 ${updates[0].title} — Ch. ${updates[0].newChapter} dropped`
-      : `📚 ${updates.length} new chapters dropped`;
+      ? `${updates[0].title} — Ch. ${updates[0].newChapter} dropped`
+      : `${updates.length} new chapters dropped`;
 
   const body = updates
     .map(({ title, newChapter }) => `${title} → Ch. ${newChapter}`)
