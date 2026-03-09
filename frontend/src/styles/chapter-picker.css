@@ -1,0 +1,119 @@
+/* ─── Chapter Picker ─────────────────────────────────────────────────────────── */
+
+.chapter-picker {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  width: 190px;
+  background: rgba(8, 8, 16, 0.88);
+  border: 1px solid var(--glass-border-bright);
+  border-radius: var(--r-md);
+  z-index: 20;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+  animation: dropdownOpen 0.2s var(--ease-out) both;
+}
+
+.chapter-picker.opens-down {
+  bottom: auto;
+  top: calc(100% + 10px);
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────────── */
+
+.chapter-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--glass-border);
+  background: var(--glass-2);
+}
+
+.chapter-picker-header span {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+}
+
+.chapter-picker-count {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  color: var(--accent) !important;
+  letter-spacing: 0.04em !important;
+  text-shadow: 0 0 8px rgba(255, 45, 45, 0.5);
+}
+
+/* ─── Scrollable List ────────────────────────────────────────────────────────── */
+
+.chapter-picker-list {
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.chapter-picker-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.chapter-picker-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chapter-picker-list::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 2px;
+}
+
+/* ─── List Items ─────────────────────────────────────────────────────────────── */
+
+.chapter-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-sub);
+  font-family: var(--font-mono);
+  transition:
+    background 0.12s,
+    color 0.12s;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.chapter-picker-item:last-child {
+  border-bottom: none;
+}
+
+.chapter-picker-item:hover {
+  background: var(--glass-2);
+  color: var(--text);
+}
+
+.chapter-picker-item.is-latest {
+  color: var(--text);
+}
+
+/* ─── Latest Badge ───────────────────────────────────────────────────────────── */
+
+.chapter-picker-badge {
+  background: linear-gradient(135deg, var(--accent), #ff5555);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font-body);
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(255, 45, 45, 0.4);
+}

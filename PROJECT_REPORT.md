@@ -112,9 +112,27 @@ manga-tracker/
 │       ├── main.jsx              ← React root mount
 │       ├── App.jsx               ← Root component (state + composition)
 │       ├── api.js                ← All fetch calls to the backend
-│       ├── index.css             ← All styles (design tokens + components)
+│       ├── index.css             ← Style entry point (Google Fonts + @imports)
 │       ├── hooks/
 │       │   └── useDebounce.js    ← Generic debounce hook
+│       ├── styles/               ← Split CSS modules (one file per concern)
+│       │   ├── tokens.css        ← CSS custom properties (colors, fonts, radii…)
+│       │   ├── reset.css         ← Universal reset + base html/body/button/a
+│       │   ├── animations.css    ← All @keyframes
+│       │   ├── layout.css        ← .app, .main, .tracked-grid, tile delays
+│       │   ├── header.css        ← .header, .logo, .stat-pill
+│       │   ├── toolbar.css       ← .toolbar, .tabs, search-wrap, sort, btn-add/refresh
+│       │   ├── manga-tile.css    ← Full tile card — cover, badges, actions, confirm
+│       │   ├── chapter-picker.css← Chapter dropdown
+│       │   ├── skeleton.css      ← Shimmer skeleton loader
+│       │   ├── search.css        ← Search page bar, result cards, track button
+│       │   ├── ticker.css        ← Now-reading scrolling ticker
+│       │   ├── heatmap.css       ← Activity heatmap grid, legend, tooltip
+│       │   ├── notifier.css      ← Notifier status dot + label
+│       │   ├── toast.css         ← Toast notification
+│       │   ├── empty.css         ← Empty state, error-msg, no-results
+│       │   ├── focus.css         ← :focus-visible outline
+│       │   └── responsive.css    ← All @media breakpoints
 │       └── components/
 │           ├── Header.jsx
 │           ├── Toolbar.jsx
@@ -452,9 +470,33 @@ Props: `message`, `type` (`"success"` | `"error"`), `onDone`
 
 ### 5.6 Styling System
 
-All styles live in `frontend/src/index.css`. There is no CSS framework or CSS-in-JS.
+There is no CSS framework or CSS-in-JS. Styles are written in plain CSS and split into **17 focused files** inside `frontend/src/styles/`. `frontend/src/index.css` is a thin entry point that loads Google Fonts and then `@import`s each module in dependency order:
 
-**Fonts (Google Fonts):**
+```
+index.css
+  └── styles/
+       ├── tokens.css         ← :root custom properties
+       ├── reset.css          ← box-sizing reset + base element styles
+       ├── animations.css     ← all @keyframes
+       ├── layout.css         ← app shell, main, grid, entrance delays
+       ├── header.css         ← header bar, logo, stat pill
+       ├── toolbar.css        ← toolbar, tabs, inline search/sort, action buttons
+       ├── manga-tile.css     ← full tile card (cover, badges, flip, actions…)
+       ├── chapter-picker.css ← chapter dropdown
+       ├── skeleton.css       ← shimmer skeleton placeholders
+       ├── search.css         ← full-page search bar, result cards, track button
+       ├── ticker.css         ← now-reading ticker
+       ├── heatmap.css        ← activity heatmap, legend, tooltip
+       ├── notifier.css       ← notifier status indicator
+       ├── toast.css          ← toast notification
+       ├── empty.css          ← empty states, error messages, no-results
+       ├── focus.css          ← :focus-visible outline
+       └── responsive.css     ← all @media breakpoints (must come last)
+```
+
+No JSX files were changed — the split is purely organisational.
+
+**Fonts (Google Fonts, loaded in `index.css`):**
 - `Bebas Neue` — display/logo font
 - `Syne` (400/600/700/800) — body font
 - `DM Mono` (400/500) — monospace
@@ -1145,7 +1187,7 @@ This is necessary because manga titles on MangaBolt sometimes have slightly diff
 
 ## 15. Design System
 
-The visual design follows a **dark glassmorphism** aesthetic with a red accent. Everything is implemented in plain CSS — no Tailwind, no CSS modules, no styled-components.
+The visual design follows a **dark glassmorphism** aesthetic with a red accent. Everything is implemented in plain CSS — no Tailwind, no CSS modules, no styled-components. Styles are split into 17 focused files under `frontend/src/styles/` (see §5.6).
 
 ### Layout
 
@@ -1167,11 +1209,11 @@ Cards use semi-transparent backgrounds (`--glass`, `--glass-2`) with `backdrop-f
 
 ### Skeleton shimmer
 
-`.skeleton` class uses an animated `linear-gradient` moving across the element:
+`.skeleton` class uses an animated `linear-gradient` moving across the element (defined in `styles/skeleton.css`; the keyframe lives in `styles/animations.css`):
 ```css
-background: linear-gradient(90deg, var(--glass) 25%, var(--glass-3) 50%, var(--glass) 75%);
+background: linear-gradient(90deg, var(--glass) 25%, var(--glass-2) 50%, var(--glass) 75%);
 background-size: 200% 100%;
-animation: shimmer 1.4s infinite;
+animation: shimmer 1.8s ease-in-out infinite;
 ```
 
 ### Status badges

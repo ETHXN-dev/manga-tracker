@@ -1,0 +1,698 @@
+/* ─── Tile Card ──────────────────────────────────────────────────────────────── */
+
+.tile-flip-wrap {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  transition:
+    border-color 0.3s var(--ease-out),
+    transform 0.3s var(--ease-out),
+    box-shadow 0.3s var(--ease-out);
+  animation: tileIn 0.5s var(--ease-out) both;
+  will-change: transform;
+}
+
+.tile-flip-wrap:hover {
+  border-color: rgba(255, 45, 45, 0.45);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(255, 45, 45, 0.15),
+    0 0 0 1px rgba(255, 45, 45, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.tile-flip-wrap.has-unread {
+  border-color: rgba(255, 45, 45, 0.35);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(255, 45, 45, 0.1);
+}
+
+.tile-flip-wrap.has-unread:hover {
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(255, 45, 45, 0.25),
+    0 0 0 1px rgba(255, 45, 45, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.tile-flip-wrap.is-completed {
+  border-color: rgba(244, 162, 97, 0.2);
+  opacity: 0.85;
+}
+
+.tile-flip-wrap.is-new {
+  animation:
+    tileIn 0.45s var(--ease-out) both,
+    newCardPulse 1.4s ease-out 0.3s 1;
+}
+
+/* ─── Flip ───────────────────────────────────────────────────────────────────── */
+
+.tile-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.tile-flip-wrap.is-flipped .tile-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.manga-tile,
+.tile-front {
+  display: flex;
+  flex-direction: column;
+  backface-visibility: hidden;
+}
+
+/* ─── Tile Back (Delete Confirm) ─────────────────────────────────────────────── */
+
+.tile-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  min-height: 220px;
+  background: rgba(5, 5, 7, 0.75);
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+}
+
+.tile-back-blur {
+  position: absolute;
+  inset: 0;
+  filter: blur(24px) brightness(0.18) saturate(1.6);
+  overflow: hidden;
+  transform: scale(1.15);
+}
+
+.tile-back-blur img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tile-back-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.tile-back-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  max-width: 90%;
+  line-height: 1.4;
+}
+
+.tile-back-question {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent);
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 20px rgba(255, 45, 45, 0.6);
+}
+
+.tile-back-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ─── Cover Image ────────────────────────────────────────────────────────────── */
+
+.tile-cover {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 200px;
+  overflow: hidden;
+  background: var(--glass-2);
+  flex-shrink: 0;
+  contain: layout style;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+.tile-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    transform 0.55s var(--ease-out),
+    filter 0.4s;
+  display: block;
+  will-change: transform;
+}
+
+.tile-flip-wrap:hover .tile-cover img {
+  transform: scale(1.07);
+  filter: brightness(1.08) saturate(1.05);
+}
+
+.tile-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--text-muted);
+}
+
+/* Bottom gradient overlay on cover */
+.tile-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.3) 35%,
+    transparent 65%
+  );
+  pointer-events: none;
+}
+
+/* ─── Chapter Overlay (on cover) ─────────────────────────────────────────────── */
+
+.tile-chapter-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 14px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.08em;
+  color: white;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+  z-index: 1;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.tile-chapter-overlay span {
+  color: var(--accent);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  display: block;
+  letter-spacing: 0.1em;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  opacity: 0.9;
+  text-shadow: 0 0 12px rgba(255, 45, 45, 0.7);
+}
+
+/* ─── Status Badge (top-right of cover) ──────────────────────────────────────── */
+
+.tile-status-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  z-index: 1;
+  animation: badgePop 0.35s var(--ease-spring) both;
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+}
+
+.tile-status-badge.status-new {
+  background: rgba(255, 45, 45, 0.85);
+  color: white;
+  box-shadow:
+    0 0 16px rgba(255, 45, 45, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.tile-status-badge.status-uptodate {
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--green);
+  border: 1px solid rgba(57, 224, 122, 0.4);
+  box-shadow: 0 0 10px rgba(57, 224, 122, 0.15);
+}
+
+.tile-status-badge.status-completed {
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--gold);
+  border: 1px solid rgba(244, 162, 97, 0.4);
+}
+
+/* ─── Unread Badge (top-left of cover) ───────────────────────────────────────── */
+
+.tile-unread-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--accent);
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  z-index: 1;
+  letter-spacing: 0.04em;
+  animation: badgePop 0.35s var(--ease-spring) both;
+  box-shadow:
+    0 0 16px rgba(255, 45, 45, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Delete Button (hover reveal) ──────────────────────────────────────────── */
+
+.tile-delete-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 30px;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    background 0.15s,
+    transform 0.15s var(--ease-spring);
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+}
+
+.tile-flip-wrap:hover .tile-delete-btn {
+  opacity: 1;
+}
+
+.tile-delete-btn:hover {
+  background: rgba(255, 45, 45, 0.75);
+  transform: scale(1.12);
+  box-shadow: 0 0 12px rgba(255, 45, 45, 0.5);
+}
+
+.tile-delete-btn svg {
+  width: 13px;
+  height: 13px;
+  stroke: rgba(255, 255, 255, 0.75);
+  transition: stroke 0.15s;
+}
+
+.tile-delete-btn:hover svg {
+  stroke: white;
+}
+
+/* ─── Card Body ──────────────────────────────────────────────────────────────── */
+
+.tile-info {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: linear-gradient(
+    180deg,
+    var(--glass) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+}
+
+.tile-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--font-body);
+}
+
+.tile-chapter-loading,
+.tile-chapter-error {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  opacity: 0.7;
+}
+
+/* ─── Card Actions Row ───────────────────────────────────────────────────────── */
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Read Now Button ────────────────────────────────────────────────────────── */
+
+.btn-read {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--accent) 0%, #ff5050 100%);
+  color: white;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  box-shadow:
+    0 0 16px rgba(255, 45, 45, 0.35),
+    0 4px 8px rgba(255, 45, 45, 0.2);
+  transition:
+    box-shadow 0.2s,
+    transform 0.15s var(--ease-spring),
+    filter 0.2s;
+  text-decoration: none;
+}
+
+.btn-read:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 24px rgba(255, 45, 45, 0.55),
+    0 6px 12px rgba(255, 45, 45, 0.3);
+}
+
+.btn-read:active {
+  transform: scale(0.97);
+}
+
+.btn-read svg {
+  width: 11px;
+  height: 11px;
+  stroke: white;
+  stroke-width: 2.5;
+  flex-shrink: 0;
+}
+
+/* ─── Chapter Toggle Button ──────────────────────────────────────────────────── */
+
+.btn-chapter-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--glass-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    background 0.18s,
+    transform 0.15s var(--ease-spring),
+    box-shadow 0.18s;
+  flex-shrink: 0;
+}
+
+.btn-chapter-toggle:hover,
+.btn-chapter-toggle.open {
+  border-color: rgba(255, 45, 45, 0.5);
+  background: var(--glass-3);
+  box-shadow: 0 0 10px rgba(255, 45, 45, 0.2);
+}
+
+.btn-chapter-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.btn-chapter-toggle:active {
+  transform: scale(0.93);
+}
+
+.btn-chapter-toggle svg {
+  width: 13px;
+  height: 13px;
+  stroke: var(--text-muted);
+  stroke-width: 2;
+  transition:
+    transform 0.25s var(--ease-out),
+    stroke 0.18s;
+}
+
+.btn-chapter-toggle.open svg {
+  transform: rotate(180deg);
+  stroke: var(--accent);
+}
+
+/* ─── Progress Row ───────────────────────────────────────────────────────────── */
+
+.progress-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progress-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ─── Mark Read Button ───────────────────────────────────────────────────────── */
+
+.mark-read-btn {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 7px 8px;
+  border-radius: var(--r-sm);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  transition:
+    border-color 0.18s,
+    color 0.18s,
+    background 0.18s,
+    transform 0.15s var(--ease-spring),
+    box-shadow 0.18s;
+  font-family: var(--font-body);
+  width: 100%;
+  text-align: center;
+}
+
+.mark-read-btn:hover:not(:disabled) {
+  border-color: rgba(255, 45, 45, 0.5);
+  color: var(--accent);
+  background: var(--accent-dim);
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(255, 45, 45, 0.2);
+}
+
+.mark-read-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.mark-read-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ─── Status Toggle Button ───────────────────────────────────────────────────── */
+
+.status-toggle-btn {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 7px 8px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  background: var(--glass);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  transition:
+    border-color 0.18s,
+    color 0.18s,
+    background 0.18s,
+    transform 0.15s var(--ease-spring);
+  font-family: var(--font-body);
+  width: 100%;
+  text-align: center;
+}
+
+.status-toggle-btn:hover:not(:disabled) {
+  border-color: rgba(255, 45, 45, 0.5);
+  color: var(--accent);
+  background: var(--accent-dim);
+  transform: translateY(-1px);
+}
+
+/* ─── Confirm Buttons (tile back) ────────────────────────────────────────────── */
+
+.tile-confirm-yes {
+  background: linear-gradient(135deg, var(--accent), #ff5555);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 20px;
+  border-radius: var(--r-sm);
+  box-shadow: 0 0 16px rgba(255, 45, 45, 0.45);
+  transition:
+    filter 0.18s,
+    transform 0.15s var(--ease-spring);
+}
+
+.tile-confirm-yes:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.tile-confirm-yes:active {
+  transform: scale(0.97);
+}
+
+.tile-confirm-no {
+  background: var(--glass-2);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 20px;
+  border-radius: var(--r-sm);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  transition:
+    background 0.18s,
+    color 0.18s,
+    border-color 0.18s;
+}
+
+.tile-confirm-no:hover {
+  background: var(--glass-3);
+  color: var(--text);
+  border-color: var(--glass-border-bright);
+}
+
+/* ─── Add Card (placeholder tile) ───────────────────────────────────────────── */
+
+.card-add {
+  background: rgba(255, 45, 45, 0.03);
+  border: 1px dashed rgba(255, 45, 45, 0.25);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s var(--ease-out),
+    box-shadow 0.2s;
+  min-height: 260px;
+  padding: 40px 20px;
+}
+
+.card-add:hover {
+  border-color: rgba(255, 45, 45, 0.6);
+  background: rgba(255, 45, 45, 0.06);
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 30px rgba(255, 45, 45, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.card-add svg {
+  width: 28px;
+  height: 28px;
+  stroke: rgba(255, 45, 45, 0.35);
+  stroke-width: 1.5;
+  transition:
+    stroke 0.2s,
+    transform 0.25s var(--ease-spring);
+}
+
+.card-add:hover svg {
+  stroke: var(--accent);
+  transform: rotate(90deg) scale(1.12);
+  filter: drop-shadow(0 0 8px rgba(255, 45, 45, 0.6));
+}
+
+.card-add span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 45, 45, 0.35);
+  transition: color 0.2s;
+}
+
+.card-add:hover span {
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(255, 45, 45, 0.5);
+}
+
+/* ─── Source Unavailable ─────────────────────────────────────────────────────── */
+
+.tile-unavailable {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  padding: 6px 0;
+}
+
+.tile-unavailable svg {
+  width: 12px;
+  height: 12px;
+  stroke: var(--text-muted);
+  flex-shrink: 0;
+}

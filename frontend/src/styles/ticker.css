@@ -1,0 +1,72 @@
+/* ─── Now Reading Ticker ─────────────────────────────────────────────────────── */
+
+.ticker-wrap {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 45, 45, 0.04);
+  border-bottom: 1px solid var(--glass-border);
+  overflow: hidden;
+  height: 26px;
+  position: relative;
+  z-index: 2;
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+}
+
+/* ─── Label ──────────────────────────────────────────────────────────────────── */
+
+.ticker-label {
+  flex-shrink: 0;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(255, 45, 45, 0.6);
+  padding: 0 0.9rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  border-right: 1px solid var(--glass-border);
+  font-family: var(--font-body);
+}
+
+/* ─── Scrolling Track ────────────────────────────────────────────────────────── */
+
+.ticker-track {
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    black 5%,
+    black 95%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    black 5%,
+    black 95%,
+    transparent
+  );
+}
+
+.ticker-content {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-body);
+  animation: tickerScroll 32s linear infinite;
+  will-change: transform;
+}
+
+.ticker-content:hover {
+  animation-play-state: paused;
+}

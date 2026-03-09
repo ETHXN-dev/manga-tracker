@@ -1,0 +1,203 @@
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+/* ─── Large Desktop (1400px+) ────────────────────────────────────────────────── */
+@media (min-width: 1400px) {
+  .header  { padding: 0 60px; }
+  .toolbar { padding: 24px 60px 18px; }
+  .main    { padding: 0 60px 60px; }
+
+  .tracked-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+/* ─── Tablet Landscape (≤1024px) ─────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .header  { padding: 0 28px; }
+  .toolbar { padding: 16px 28px 14px; }
+  .main    { padding: 0 28px 60px; }
+
+  .tracked-grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+  }
+}
+
+/* ─── Tablet Portrait (≤768px) ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 20px;
+    height: 56px;
+  }
+
+  /* Hide stat pill — not enough room */
+  .stat-pill {
+    display: none;
+  }
+
+  .toolbar {
+    padding: 14px 20px 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  /* Tabs scroll horizontally */
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    flex-shrink: 0;
+    padding: 7px 16px;
+    font-size: 11px;
+  }
+
+  /* Toolbar row: search stretches, sort + add + refresh line up */
+  .toolbar-right {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    gap: 8px;
+    align-items: center;
+  }
+  .search-wrap           { grid-column: 1; }
+  .search-wrap input     { width: 100%; }
+  .search-wrap input:focus { width: 100%; }
+  .sort-select           { grid-column: 2; }
+  .btn-add               { grid-column: 3; }
+  .btn-refresh           { grid-column: 4; }
+
+  .main { padding: 0 20px 40px; }
+
+  .tracked-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .search-bar    { max-width: 100%; }
+  .results-list  { max-width: 100%; }
+
+  .heatmap-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ─── Mobile (≤480px) ────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .header {
+    padding: 0 16px;
+    height: 52px;
+  }
+
+  .logo-text { font-size: 18px; }
+
+  .logo-mark {
+    width: 30px;
+    height: 30px;
+  }
+  .logo-mark svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .toolbar {
+    padding: 12px 16px 0;
+    gap: 8px;
+  }
+
+  .tab       { padding: 6px 12px; font-size: 10px; }
+  .tab-count { display: none; }
+
+  /* Sort hidden — not enough room; search + add + refresh only */
+  .toolbar-right {
+    grid-template-columns: 1fr auto auto;
+  }
+  .sort-select { display: none; }
+  .btn-add     { grid-column: 2; }
+  .btn-refresh { grid-column: 3; }
+
+  /* Hide btn-add label text, keep icon only */
+  .btn-add .btn-add-label { display: none; }
+
+  .main { padding: 0 16px 32px; }
+
+  .tracked-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .tile-info            { padding: 10px; gap: 8px; }
+  .tile-title           { font-size: 0.82rem; }
+  .tile-chapter-overlay { font-size: 22px; }
+  .btn-read             { font-size: 10px; padding: 7px 8px; }
+
+  /* Result cards stack cover + info/button */
+  .result-card {
+    grid-template-columns: 40px 1fr;
+    grid-template-rows: auto auto;
+    gap: 0.6rem;
+  }
+  .track-btn {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 2px;
+    font-size: 10px;
+    padding: 6px 12px;
+  }
+
+  .chapter-picker { width: 170px; }
+  .heatmap-total  { display: none; }
+  .ticker-wrap    { height: 26px; }
+
+  .search-input {
+    font-size: 0.85rem;
+    padding: 0.8rem 1rem 0.8rem 2.5rem;
+  }
+}
+
+/* ─── Small Phones (≤360px) ──────────────────────────────────────────────────── */
+@media (max-width: 360px) {
+  .header  { padding: 0 12px; }
+  .toolbar { padding: 10px 12px 0; }
+  .main    { padding: 0 12px 28px; }
+
+  .logo-text { font-size: 16px; }
+  .tab       { padding: 5px 10px; }
+
+  .tracked-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .tile-info  { padding: 8px; gap: 6px; }
+  .tile-title { font-size: 0.76rem; -webkit-line-clamp: 1; }
+  .btn-read   { font-size: 9px; padding: 6px 5px; letter-spacing: 0.03em; }
+
+  .tile-chapter-overlay {
+    font-size: 18px;
+    bottom: 8px;
+    left: 8px;
+  }
+
+  .btn-add { padding: 8px 10px; }
+}
+
+/* ─── Touch Devices — always show delete btn, disable hover transforms ────────── */
+@media (hover: none) {
+  .tile-delete-btn {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  .tile-flip-wrap:active { transform: scale(0.98); }
+  .btn-read:active       { filter: brightness(0.9); }
+  .btn-add:active        { filter: brightness(0.9); }
+}

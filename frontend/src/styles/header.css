@@ -1,0 +1,153 @@
+/* ─── Header ─────────────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  height: 66px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(5, 5, 7, 0.6);
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+  border-bottom: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+
+.header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 45, 45, 0.04) 0%,
+    transparent 50%,
+    rgba(80, 40, 200, 0.03) 100%
+  );
+  pointer-events: none;
+}
+
+/* Animated accent underline */
+.header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 45, 45, 0.4) 30%,
+    rgba(255, 45, 45, 0.6) 50%,
+    rgba(255, 45, 45, 0.4) 70%,
+    transparent 100%
+  );
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+.header-right:empty {
+  display: none;
+}
+
+/* ─── Logo ───────────────────────────────────────────────────────────────────── */
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  position: relative;
+  z-index: 1;
+}
+
+.logo:hover {
+  opacity: 0.85;
+}
+
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, var(--accent) 0%, #ff6b6b 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow:
+    0 0 20px rgba(255, 45, 45, 0.5),
+    0 4px 12px rgba(255, 45, 45, 0.3);
+  transition:
+    transform 0.25s var(--ease-spring),
+    box-shadow 0.25s;
+}
+
+.logo:hover .logo-mark {
+  transform: scale(1.08) rotate(-2deg);
+  box-shadow:
+    0 0 30px rgba(255, 45, 45, 0.7),
+    0 4px 16px rgba(255, 45, 45, 0.4);
+}
+
+.logo-mark svg {
+  width: 18px;
+  height: 18px;
+  fill: white;
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.14em;
+  color: var(--text);
+}
+
+.logo-text span {
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(255, 45, 45, 0.6);
+}
+
+/* ─── Stat Pill ──────────────────────────────────────────────────────────────── */
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+
+.stat-pill:hover {
+  border-color: var(--glass-border-bright);
+  background: var(--glass-2);
+}
+
+.stat-pill strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.stat-pill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulse 2.5s ease-in-out infinite;
+  flex-shrink: 0;
+}

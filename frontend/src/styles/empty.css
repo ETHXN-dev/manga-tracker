@@ -1,0 +1,77 @@
+/* ─── Empty State ────────────────────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 0.75rem;
+  animation: fadeUp 0.4s var(--ease-out) both;
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+  animation: fadeUp 0.5s var(--ease-out) 0.1s both;
+}
+
+.empty-state p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.empty-sub {
+  font-size: 0.8rem !important;
+}
+
+/* ─── CTA Button ─────────────────────────────────────────────────────────────── */
+
+.empty-cta {
+  background: linear-gradient(135deg, var(--accent), #ff5050);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border-radius: var(--r-sm);
+  box-shadow: 0 0 16px rgba(255, 45, 45, 0.35);
+  transition:
+    filter 0.18s,
+    transform 0.15s var(--ease-spring);
+  font-family: var(--font-body);
+}
+
+.empty-cta:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* ─── Error Message ──────────────────────────────────────────────────────────── */
+
+.error-msg {
+  background: rgba(255, 45, 45, 0.07);
+  border: 1px solid rgba(255, 45, 45, 0.2);
+  color: var(--accent);
+  font-size: 0.82rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--r-sm);
+  margin-bottom: 1rem;
+  animation: fadeUp 0.3s var(--ease-out) both;
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+}
+
+/* ─── No Results ─────────────────────────────────────────────────────────────── */
+
+.no-results {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 2.5rem 0;
+  font-weight: 600;
+  text-align: center;
+  animation: fadeUp 0.3s var(--ease-out) both;
+}

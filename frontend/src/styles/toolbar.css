@@ -1,0 +1,265 @@
+/* ─── Toolbar ────────────────────────────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 40px 16px;
+  gap: 16px;
+}
+
+.toolbar .stat-pill {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ─── Tabs ───────────────────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  padding: 4px;
+  border-radius: var(--r-md);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 18px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition:
+    color 0.18s,
+    background 0.18s;
+  border: none;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--glass-2);
+}
+
+.tab.active {
+  background: linear-gradient(135deg, var(--accent) 0%, #ff5555 100%);
+  color: white;
+  box-shadow:
+    0 0 16px rgba(255, 45, 45, 0.45),
+    0 4px 8px rgba(255, 45, 45, 0.2);
+}
+
+.tab-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  animation: badgePop 0.3s var(--ease-spring) both;
+}
+
+.tab.active .tab-count {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tab:not(.active) .tab-count {
+  background: var(--glass-2);
+  color: var(--text-muted);
+}
+
+/* ─── Toolbar Search ─────────────────────────────────────────────────────────── */
+
+.search-wrap {
+  position: relative;
+}
+
+.search-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-muted);
+  pointer-events: none;
+  transition: stroke 0.18s;
+}
+
+.search-wrap:focus-within svg {
+  stroke: var(--text-sub);
+}
+
+.search-wrap input {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 8px 12px 8px 34px;
+  border-radius: var(--r-sm);
+  width: 220px;
+  outline: none;
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s,
+    width 0.25s var(--ease-out),
+    background 0.18s;
+}
+
+.search-wrap input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-wrap input:focus {
+  border-color: rgba(255, 45, 45, 0.5);
+  background: var(--glass-2);
+  box-shadow: 0 0 0 3px rgba(255, 45, 45, 0.1);
+  width: 250px;
+}
+
+/* ─── Sort Select ────────────────────────────────────────────────────────────── */
+
+.sort-select {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 8px 30px 8px 12px;
+  border-radius: var(--r-sm);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition:
+    border-color 0.18s,
+    background-color 0.18s;
+}
+
+.sort-select:focus {
+  border-color: rgba(255, 45, 45, 0.5);
+  background-color: var(--glass-2);
+}
+
+/* ─── Add Button ─────────────────────────────────────────────────────────────── */
+
+.btn-add {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, var(--accent), #ff5050);
+  color: white;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border-radius: var(--r-sm);
+  box-shadow: 0 0 16px rgba(255, 45, 45, 0.35);
+  transition:
+    filter 0.18s,
+    transform 0.15s var(--ease-spring),
+    box-shadow 0.18s;
+  white-space: nowrap;
+}
+
+.btn-add:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 0 24px rgba(255, 45, 45, 0.55);
+}
+
+.btn-add:active {
+  transform: scale(0.97);
+}
+
+.btn-add svg {
+  width: 14px;
+  height: 14px;
+  stroke: white;
+  stroke-width: 2.5;
+}
+
+/* ─── Refresh Button ─────────────────────────────────────────────────────────── */
+
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    background 0.18s,
+    transform 0.15s var(--ease-spring),
+    box-shadow 0.18s;
+  flex-shrink: 0;
+}
+
+.btn-refresh:hover {
+  border-color: rgba(255, 45, 45, 0.5);
+  background: var(--glass-2);
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(255, 45, 45, 0.2);
+}
+
+.btn-refresh:active {
+  transform: scale(0.93);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+
+.btn-refresh svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-muted);
+  transition: stroke 0.18s;
+}
+
+.btn-refresh:hover svg {
+  stroke: var(--accent);
+  filter: drop-shadow(0 0 4px rgba(255, 45, 45, 0.6));
+}
+
+.btn-refresh.spinning svg {
+  animation: spinOnce 0.7s var(--ease-out) infinite;
+  stroke: var(--accent);
+}

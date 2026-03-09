@@ -1,0 +1,45 @@
+/* ─── Toast Notification ─────────────────────────────────────────────────────── */
+
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(8, 8, 16, 0.88);
+  border: 1px solid var(--glass-border-bright);
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 11px 20px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  z-index: 9999;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: toastIn 0.25s var(--ease-out) both;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.toast svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ─── Variants ───────────────────────────────────────────────────────────────── */
+
+.toast-success {
+  border-color: rgba(57, 224, 122, 0.3);
+}
+
+.toast-success svg {
+  stroke: var(--green);
+  filter: drop-shadow(0 0 4px rgba(57, 224, 122, 0.6));
+}
