@@ -90,8 +90,8 @@ The app is a single-user, self-hosted tool — there is no authentication UI, ac
 | Service | Hosts |
 |---|---|
 | Vercel | Frontend (static) |
-| Railway | Backend (Node server) |
-| Railway | PostgreSQL database |
+| Render | Backend (Node server) |
+| Supabase | PostgreSQL database |
 
 ---
 
@@ -178,7 +178,7 @@ manga-tracker/
 └───────────────────────┬─────────────────────────────────┘
                         │ HTTPS /api/*
 ┌───────────────────────▼─────────────────────────────────┐
-│                  BACKEND (Railway)                       │
+│                  BACKEND (Render)                        │
 │                                                         │
 │  server.js                                              │
 │  ├── middleware/auth.js       (API key check)           │
@@ -202,7 +202,7 @@ manga-tracker/
 └───────────────────────┬─────────────────────────────────┘
                         │
 ┌───────────────────────▼─────────────────────────────────┐
-│            DATABASE — PostgreSQL (Railway)              │
+│            DATABASE — PostgreSQL (Supabase)             │
 │   Manga  |  ReadActivity  |  SystemStatus               │
 └─────────────────────────────────────────────────────────┘
                         │
@@ -506,7 +506,7 @@ Responsibilities:
 
 **CORS:** Origin is controlled by `process.env.FRONTEND_URL` (defaults to `http://localhost:5173`).
 
-**Keep-alive ping:** On Render free tier, the service sleeps after 15 minutes of inactivity. To prevent the cron job from missing scheduled runs, the server pings its own `/api/health` endpoint every 10 minutes using `setInterval`. This only runs when `NODE_ENV === "production"` and `RENDER_EXTERNAL_URL` is set.
+**Keep-alive ping:** On Render's free tier, the service sleeps after 15 minutes of inactivity. To prevent the cron job from missing scheduled runs, the server pings its own `/api/health` endpoint every 10 minutes using `setInterval`. This only runs when `NODE_ENV === "production"` and `RENDER_EXTERNAL_URL` is set (to the Render public URL of the backend service).
 
 > Note: The original `server.js` had a duplicate `/api/health` route — this was fixed during the refactor.
 
@@ -782,7 +782,7 @@ model SystemStatus {
 
 ## 8. API Reference
 
-Base URL (production): `https://<railway-domain>/api`
+Base URL (production): `https://<render-service>.onrender.com/api`
 Base URL (development): `http://localhost:3001/api` (proxied via Vite as `/api`)
 
 All endpoints except `/health` require header: `x-api-key: <API_KEY>`
@@ -986,12 +986,12 @@ App mounts
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `DATABASE_URL` | Yes (prod) | — | PostgreSQL connection string from Railway. For local dev with SQLite, Prisma uses `prisma/manga.db` and this can be omitted if the schema is set to `sqlite`. |
+| `DATABASE_URL` | Yes (prod) | — | PostgreSQL connection string from Supabase. For local dev with SQLite, Prisma uses `prisma/manga.db` and this can be omitted if the schema datasource is set to `sqlite`. |
 | `API_KEY` | No | — | Shared secret for the `x-api-key` header. If not set, auth is entirely disabled (fine for local dev). |
 | `FRONTEND_URL` | No | `http://localhost:5173` | Allowed CORS origin. Must exactly match the Vercel deployment URL in production (no trailing slash). |
 | `PORT` | No | `3001` | Port the Express server listens on. |
-| `NODE_ENV` | No | — | Set to `"production"` on Railway to enable the keep-alive ping. |
-| `RENDER_EXTERNAL_URL` | No | — | If set alongside `NODE_ENV=production`, activates the keep-alive self-ping. Originally intended for Render, now used on Railway too. |
+| `NODE_ENV` | No | — | Set to `"production"` on Render to enable the keep-alive ping. |
+| `RENDER_EXTERNAL_URL` | No | — | Set to your Render service's public URL (e.g. `https://<app>.onrender.com`). Activates the keep-alive self-ping when combined with `NODE_ENV=production`. |
 | `RESEND_API_KEY` | No | — | API key for the Resend email service. Email notifications are skipped if absent. |
 | `NOTIFY_EMAIL` | No | — | Recipient email address for chapter notifications. |
 | `NTFY_TOPIC` | No | — | ntfy.sh topic name for push notifications. Push notifications are skipped if absent. |
@@ -1000,7 +1000,7 @@ App mounts
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `VITE_API_URL` | No (prod only) | `"/api"` | Base URL for all API calls. Set to `https://<railway-domain>/api` on Vercel. In local dev, the Vite proxy handles `/api` → `localhost:3001` so this is not needed. |
+| `VITE_API_URL` | No (prod only) | `"/api"` | Base URL for all API calls. Set to `https://<render-service>.onrender.com/api` on Vercel. In local dev, the Vite proxy handles `/api` → `localhost:3001` so this is not needed. |
 | `VITE_API_KEY` | No | `""` | The API key sent as `x-api-key` in every request. Must match `API_KEY` on the backend. If backend has no `API_KEY` set, this can be empty. |
 
 ---
@@ -1051,41 +1051,47 @@ npm run db:studio     # Opens visual DB browser at localhost:5555
 
 The project deploys to:
 - **Frontend → Vercel** (static site from `frontend/`)
-- **Backend → Railway** (Node.js service from `backend/`)
-- **Database → Railway** (PostgreSQL add-on)
+- **Backend → Render** (Node.js web service from `backend/`)
+- **Database → Supabase** (PostgreSQL)
 
-### Step 1 — Database on Railway
-1. Railway → New Project → Provision PostgreSQL
-2. Copy `DATABASE_URL` from the Variables tab
+### Step 1 — Database on Supabase
+1. [supabase.com](https://supabase.com) → New Project
+2. Once provisioned, go to **Project Settings** → **Database** → copy the **URI** connection string (the `postgresql://...` one, not the pooled version for Prisma direct connections)
+3. This becomes your `DATABASE_URL`
 
-### Step 2 — Backend on Railway
-1. New Project → Deploy from GitHub → set Root Directory to `backend`
-2. Set environment variables:
+### Step 2 — Backend on Render
+1. [render.com](https://render.com) → New → **Web Service** → connect your GitHub repo
+2. Set **Root Directory** to `backend`, **Build Command** to `npm install`, **Start Command** to `node server.js`
+3. Set environment variables in the Render dashboard:
    ```
-   DATABASE_URL=postgresql://...
+   DATABASE_URL=postgresql://...     ← from Supabase Step 1
    NODE_ENV=production
-   FRONTEND_URL=https://<your-vercel-url>
+   FRONTEND_URL=https://<your-vercel-url>   ← fill in after Step 3
    API_KEY=<your-secret-key>
    RESEND_API_KEY=<optional>
    NOTIFY_EMAIL=<optional>
    NTFY_TOPIC=<optional>
-   RENDER_EXTERNAL_URL=https://<your-railway-domain>
+   RENDER_EXTERNAL_URL=https://<your-render-service>.onrender.com
    ```
-3. Generate a public domain in Settings → Networking
-4. Run migration once: `npx prisma migrate deploy` (via Railway shell)
+4. Deploy — Render will give you a URL like `https://manga-tracker-backend.onrender.com`
+5. Run the DB migration once via the Render **Shell** tab:
+   ```bash
+   npx prisma migrate deploy
+   ```
 
 ### Step 3 — Frontend on Vercel
-1. Vercel → New Project → import repo → Root Directory: `frontend`
+1. [vercel.com](https://vercel.com) → New Project → import repo → Root Directory: `frontend`
 2. Set environment variables:
    ```
-   VITE_API_URL=https://<railway-domain>/api
+   VITE_API_URL=https://<your-render-service>.onrender.com/api
    VITE_API_KEY=<same-secret-key-as-backend>
    ```
-3. Deploy → get Vercel URL → paste back into Railway's `FRONTEND_URL`
+3. Deploy → copy the Vercel URL → paste it back into Render's `FRONTEND_URL` environment variable
 
 ### Notes
-- The `postinstall` script in `backend/package.json` runs `prisma generate` automatically after `npm install`, so Railway's build step works without any extra config.
+- The `postinstall` script in `backend/package.json` runs `prisma generate` automatically after `npm install`, so Render's build step works without any extra config.
 - The `prisma.db` SQLite file in `backend/prisma/` is for local dev only and should not be committed to version control (it is gitignored via `backend/.gitignore`).
+- Supabase requires the **direct** (non-pooled) connection string for Prisma migrations. If you use the pooled connection string, `prisma migrate deploy` may fail — use the URI from **Project Settings → Database → Connection string → URI**.
 
 ---
 
@@ -1192,8 +1198,8 @@ The committed `schema.prisma` has `provider = "postgresql"`. For local developme
 ### 2. Root `package.json` is a legacy artefact
 The `manga-tracker/package.json` at the repo root has `node-cron` and `nodemailer` as dependencies from an earlier version of the project before Resend replaced nodemailer. It plays no role in the current app — the frontend and backend each have their own `package.json` and `node_modules`. It can be safely deleted.
 
-### 3. `RENDER_EXTERNAL_URL` is used on Railway
-The keep-alive ping checks for `process.env.RENDER_EXTERNAL_URL` (named after Render.com, the original hosting target) but the project is now deployed on Railway. The variable just needs to be set to the Railway public URL — the name doesn't matter functionally, only its presence is checked.
+### 3. `RENDER_EXTERNAL_URL` keeps its original name
+The keep-alive ping checks for `process.env.RENDER_EXTERNAL_URL`. The backend is deployed on Render so the name is accurate. Set it to your Render service's public URL (e.g. `https://manga-tracker-backend.onrender.com`). Only its presence alongside `NODE_ENV=production` matters — the value is used as the base for the `/api/health` ping URL.
 
 ### 4. `apiFetch` always sends `Content-Type: application/json`
 The base `apiFetch` wrapper in `frontend/src/api.js` always adds `Content-Type: application/json` to every request, including GETs and DELETEs that have no body. This is harmless but technically unnecessary for those methods.

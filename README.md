@@ -5,7 +5,8 @@
 ![Node.js](https://img.shields.io/badge/Node.js-ESM-339933?logo=node.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?logo=prisma&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Railway-336791?logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E?logo=supabase&logoColor=white)
+![Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?logo=vercel&logoColor=white)
 
 ---
@@ -34,7 +35,7 @@
 | Email | Resend |
 | Push | ntfy.sh |
 | External APIs | AniList GraphQL, MangaDex REST, MangaBolt |
-| Hosting | Vercel (frontend) + Railway (backend + DB) |
+| Hosting | Vercel (frontend) + Render (backend) + Supabase (DB) |
 
 ---
 
@@ -153,8 +154,8 @@ The Vite dev server automatically proxies `/api/*` → `http://localhost:3001`, 
 | `API_KEY` | No | Shared secret for `x-api-key` header. Auth is skipped if unset. |
 | `FRONTEND_URL` | No | Allowed CORS origin. Defaults to `http://localhost:5173`. |
 | `PORT` | No | Server port. Defaults to `3001`. |
-| `NODE_ENV` | No | Set to `production` on Railway to enable the keep-alive ping. |
-| `RENDER_EXTERNAL_URL` | No | Your Railway public URL — activates the keep-alive self-ping. |
+| `NODE_ENV` | No | Set to `production` on Render to enable the keep-alive ping. |
+| `RENDER_EXTERNAL_URL` | No | Your Render service's public URL (e.g. `https://<app>.onrender.com`) — activates the keep-alive self-ping. |
 | `RESEND_API_KEY` | No | Resend API key for email notifications. |
 | `NOTIFY_EMAIL` | No | Recipient address for chapter notification emails. |
 | `NTFY_TOPIC` | No | ntfy.sh topic name for push notifications. |
@@ -163,24 +164,25 @@ The Vite dev server automatically proxies `/api/*` → `http://localhost:3001`, 
 
 | Variable | Required | Description |
 |---|---|---|
-| `VITE_API_URL` | Yes (prod) | Backend URL e.g. `https://your-backend.railway.app/api` |
+| `VITE_API_URL` | Yes (prod) | Backend URL e.g. `https://your-backend.onrender.com/api` |
 | `VITE_API_KEY` | No | Must match `API_KEY` on the backend. |
 
 ---
 
 ## Deployment
 
-### Database — Railway
+### Database — Supabase
 
-1. Railway → **New Project** → **Provision PostgreSQL**
-2. Copy the `DATABASE_URL` from the Variables tab
+1. [supabase.com](https://supabase.com) → **New Project**
+2. Go to **Project Settings** → **Database** → copy the **URI** connection string (use the direct URI, not the pooled one, for Prisma compatibility)
 
-### Backend — Railway
+### Backend — Render
 
-1. **New Project** → **Deploy from GitHub** → set Root Directory to `backend`
-2. Add environment variables (see table above)
-3. Settings → Networking → **Generate Domain**
-4. Run the DB migration once via the Railway shell:
+1. [render.com](https://render.com) → **New** → **Web Service** → connect your GitHub repo
+2. Set **Root Directory** to `backend`, **Build Command** to `npm install`, **Start Command** to `node server.js`
+3. Add environment variables (see table above) — set `RENDER_EXTERNAL_URL` to your Render service URL
+4. Deploy — Render gives you a URL like `https://manga-tracker-backend.onrender.com`
+5. Run the DB migration once via the Render **Shell** tab:
    ```bash
    npx prisma migrate deploy
    ```
@@ -190,10 +192,10 @@ The Vite dev server automatically proxies `/api/*` → `http://localhost:3001`, 
 1. **New Project** → import repo → Root Directory: `frontend`
 2. Add environment variables:
    ```
-   VITE_API_URL=https://<your-railway-domain>/api
+   VITE_API_URL=https://<your-render-service>.onrender.com/api
    VITE_API_KEY=<your-api-key>
    ```
-3. Deploy → copy the Vercel URL → paste it into Railway's `FRONTEND_URL` variable
+3. Deploy → copy the Vercel URL → paste it back into Render's `FRONTEND_URL` environment variable
 
 ---
 
