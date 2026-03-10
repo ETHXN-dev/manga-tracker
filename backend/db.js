@@ -167,9 +167,14 @@ export async function getActivityStats() {
   const monthAgo = new Date(now.getTime() - 30 * 86400000);
   const yearAgo = new Date(now.getTime() - 365 * 86400000);
 
-  const [total, thisWeek, thisMonth, topGroups, allDatesRaw] =
+  const [totalAgg, thisWeek, thisMonth, topGroups, allDatesRaw] =
     await Promise.all([
-      prisma.readActivity.count(),
+      // Sum currentChapter across all reading + completed manga for the
+      // "All Time" stat — reflects actual chapters read, not activity log entries
+      prisma.manga.aggregate({
+        _sum: { currentChapter: true },
+        where: { readingStatus: { in: ["reading", "completed"] } },
+      }),
       prisma.readActivity.count({ where: { readAt: { gte: weekAgo } } }),
       prisma.readActivity.count({ where: { readAt: { gte: monthAgo } } }),
       prisma.readActivity.groupBy({
@@ -184,6 +189,8 @@ export async function getActivityStats() {
         orderBy: { readAt: "desc" },
       }),
     ]);
+
+  const total = totalAgg._sum.currentChapter ?? 0;
 
   // Calculate current reading streak (consecutive UTC days with at least one read)
   const dateSet = new Set(
