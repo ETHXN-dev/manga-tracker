@@ -129,6 +129,83 @@ export async function getActivityHeatmap() {
   return map;
 }
 
+// Get the most recent N read-activity entries, each with its manga's title and cover
+export async function getRecentActivity(limit = 15) {
+  return prisma.readActivity.findMany({
+    take: limit,
+    orderBy: { readAt: "desc" },
+    include: {
+      manga: { select: { title: true, coverUrl: true } },
+    },
+  });
+}
+
+// Get reading statistics: totals by period, current streak, and top manga by chapters read
+export async function getActivityStats() {
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 86400000);
+  const monthAgo = new Date(now.getTime() - 30 * 86400000);
+  const yearAgo = new Date(now.getTime() - 365 * 86400000);
+
+  const [total, thisWeek, thisMonth, topGroups, allDatesRaw] =
+    await Promise.all([
+      prisma.readActivity.count(),
+      prisma.readActivity.count({ where: { readAt: { gte: weekAgo } } }),
+      prisma.readActivity.count({ where: { readAt: { gte: monthAgo } } }),
+      prisma.readActivity.groupBy({
+        by: ["mangaId"],
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+        take: 5,
+      }),
+      prisma.readActivity.findMany({
+        select: { readAt: true },
+        where: { readAt: { gte: yearAgo } },
+        orderBy: { readAt: "desc" },
+      }),
+    ]);
+
+  // Calculate current reading streak (consecutive UTC days with at least one read)
+  const dateSet = new Set(
+    allDatesRaw.map(({ readAt }) => readAt.toISOString().slice(0, 10)),
+  );
+  const todayStr = now.toISOString().slice(0, 10);
+  const yesterdayStr = new Date(now.getTime() - 86400000)
+    .toISOString()
+    .slice(0, 10);
+
+  let streak = 0;
+  if (dateSet.has(todayStr) || dateSet.has(yesterdayStr)) {
+    let d = new Date(
+      (dateSet.has(todayStr) ? todayStr : yesterdayStr) + "T00:00:00.000Z",
+    );
+    while (dateSet.has(d.toISOString().slice(0, 10))) {
+      streak++;
+      d = new Date(d.getTime() - 86400000);
+    }
+  }
+
+  // Resolve manga titles/covers for the top groups in one batch query
+  const topMangaIds = topGroups.map((g) => g.mangaId);
+  const mangaRecords =
+    topMangaIds.length > 0
+      ? await prisma.manga.findMany({
+          where: { id: { in: topMangaIds } },
+          select: { id: true, title: true, coverUrl: true },
+        })
+      : [];
+  const mangaMap = Object.fromEntries(mangaRecords.map((m) => [m.id, m]));
+
+  const topManga = topGroups.map((g) => ({
+    mangaId: g.mangaId,
+    count: g._count.id,
+    title: mangaMap[g.mangaId]?.title ?? "Unknown",
+    coverUrl: mangaMap[g.mangaId]?.coverUrl ?? null,
+  }));
+
+  return { total, thisWeek, thisMonth, streak, topManga };
+}
+
 // Bust chapter cache for all manga — forces re-fetch on next request
 export async function bustAllChapterCaches() {
   return prisma.manga.updateMany({

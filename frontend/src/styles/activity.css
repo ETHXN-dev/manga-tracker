@@ -1,0 +1,325 @@
+/* ─── Activity Stats ─────────────────────────────────────────────────────────── */
+
+.activity-stats-wrap {
+  margin-bottom: 1.75rem;
+  animation: fadeUp 0.4s var(--ease-out) both;
+}
+
+/* ─── Stat Cards ─────────────────────────────────────────────────────────────── */
+
+.activity-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.activity-stat-card {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  padding: 1.1rem 1.25rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  transition:
+    border-color 0.2s var(--ease-out),
+    background   0.2s var(--ease-out);
+}
+
+.activity-stat-card:hover {
+  background: var(--glass-2);
+  border-color: var(--glass-border-bright);
+}
+
+.activity-stat-card.streak-active {
+  border-color: rgba(255, 45, 45, 0.4);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 45, 45, 0.08) 0%,
+    var(--glass) 60%
+  );
+}
+
+.activity-stat-card.streak-active .asc-value {
+  color: var(--accent);
+}
+
+/* ─── Stat Card Typography ───────────────────────────────────────────────────── */
+
+.asc-value {
+  font-family:  var(--font-display);
+  font-size:    2.4rem;
+  line-height:  1;
+  color:        var(--text);
+  letter-spacing: 0.02em;
+}
+
+.asc-label {
+  font-size:      0.64rem;
+  font-weight:    700;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color:          var(--text-muted);
+  margin-top:     0.2rem;
+}
+
+.asc-unit {
+  font-size: 0.58rem;
+  color:     var(--text-muted);
+  opacity:   0.55;
+}
+
+/* ─── Section Eyebrow (shared by both components) ───────────────────────────── */
+
+.section-eyebrow {
+  display:        block;
+  font-size:      0.66rem;
+  font-weight:    700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color:          var(--text-muted);
+  margin-bottom:  0.7rem;
+}
+
+/* ─── Top Manga ──────────────────────────────────────────────────────────────── */
+
+.top-manga-wrap {
+  /* sits directly below stat cards, no extra margin needed */
+}
+
+.top-manga-list {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.45rem;
+}
+
+.top-manga-row {
+  display:     grid;
+  grid-template-columns: 1.6rem 2rem 1fr auto auto;
+  align-items: center;
+  gap:         0.65rem;
+}
+
+.top-manga-rank {
+  font-size:   0.6rem;
+  font-family: var(--font-mono);
+  color:       var(--text-muted);
+  text-align:  right;
+  opacity:     0.7;
+}
+
+/* Small thumbnail in the top-manga row */
+.top-manga-cover {
+  width:         2rem;
+  height:        2.75rem;
+  object-fit:    cover;
+  border-radius: 4px;
+  background:    var(--glass-2);
+  flex-shrink:   0;
+  display:       block;
+}
+
+.top-manga-cover-placeholder {
+  background: var(--glass-2);
+}
+
+.top-manga-title {
+  font-size:     0.78rem;
+  color:         var(--text-sub);
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+
+.top-manga-bar-track {
+  width:         140px;
+  height:        4px;
+  background:    var(--glass-3);
+  border-radius: 2px;
+  overflow:      hidden;
+}
+
+.top-manga-bar-fill {
+  height:           100%;
+  background:       var(--accent);
+  border-radius:    2px;
+  opacity:          0.65;
+  transform-origin: left center;
+  animation:        barGrow 0.7s var(--ease-out) both;
+  min-width:        3px;
+}
+
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.top-manga-count {
+  font-size:   0.63rem;
+  font-family: var(--font-mono);
+  color:       var(--text-muted);
+  white-space: nowrap;
+  min-width:   3.5ch;
+  text-align:  right;
+}
+
+/* Skeleton for top-manga rows */
+.top-manga-skel-title {
+  height:        0.7rem;
+  border-radius: 4px;
+  width:         55%;
+}
+
+.top-manga-skel-bar {
+  border-radius: 2px;
+}
+
+/* ─── Recent Reads ───────────────────────────────────────────────────────────── */
+
+.recent-reads-wrap {
+  margin-bottom: 1.75rem;
+  animation: fadeUp 0.45s var(--ease-out) 0.06s both;
+}
+
+.recent-reads-empty {
+  font-size: 0.78rem;
+  color:     var(--text-muted);
+  padding:   0.75rem 0;
+  margin:    0;
+}
+
+.recent-reads-list {
+  display:        flex;
+  flex-direction: column;
+  gap:            0;
+  /* slight negative horizontal margin so hover bg bleeds to edges */
+  margin: 0 -0.5rem;
+}
+
+/* ─── Individual Read Item ───────────────────────────────────────────────────── */
+
+.recent-read-item {
+  display:     grid;
+  grid-template-columns: 2.8rem 1fr auto;
+  align-items: center;
+  gap:         0.875rem;
+  padding:     0.5rem 0.5rem;
+  border-radius: var(--r-sm);
+  transition:  background 0.15s var(--ease-out);
+}
+
+.recent-read-item:hover {
+  background: var(--glass);
+}
+
+/* Cover thumbnail */
+.rri-cover {
+  width:         2.8rem;
+  height:        3.85rem;
+  object-fit:    cover;
+  border-radius: 6px;
+  background:    var(--glass-2);
+  flex-shrink:   0;
+  display:       block;
+}
+
+.rri-cover-placeholder {
+  background: var(--glass-2);
+}
+
+/* Title + chapter meta */
+.rri-body {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.28rem;
+  overflow:       hidden;
+  min-width:      0;
+}
+
+.rri-title {
+  font-size:     0.82rem;
+  font-weight:   600;
+  color:         var(--text);
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+
+.rri-meta {
+  font-size:   0.68rem;
+  font-family: var(--font-mono);
+  color:       var(--text-muted);
+}
+
+/* Time-ago label */
+.rri-time {
+  font-size:   0.63rem;
+  font-family: var(--font-mono);
+  color:       var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self:  flex-start;
+  margin-top:  0.35rem;
+}
+
+/* ─── Recent Reads Skeleton ──────────────────────────────────────────────────── */
+
+.rri-skel-title {
+  height:        0.78rem;
+  width:         62%;
+  border-radius: 4px;
+}
+
+.rri-skel-meta {
+  height:        0.65rem;
+  width:         28%;
+  border-radius: 4px;
+}
+
+.rri-skel-time {
+  width:         3.5rem;
+  height:        0.63rem;
+  border-radius: 4px;
+  align-self:    flex-start;
+  margin-top:    0.35rem;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+/* Tablet portrait — 2×2 stat grid */
+@media (max-width: 768px) {
+  .activity-stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .top-manga-bar-track {
+    width: 80px;
+  }
+}
+
+/* Mobile — full-width stat cards stack */
+@media (max-width: 480px) {
+  .activity-stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .asc-value {
+    font-size: 2rem;
+  }
+
+  .top-manga-row {
+    grid-template-columns: 1.4rem 1.6rem 1fr auto;
+  }
+
+  /* Hide bar chart on small screens — not enough space */
+  .top-manga-bar-track {
+    display: none;
+  }
+
+  .recent-reads-list {
+    margin: 0 -0.25rem;
+  }
+}

@@ -24,6 +24,7 @@
 @import "./styles/ticker.css";
 @import "./styles/heatmap.css";
 @import "./styles/notifier.css";
+@import "./styles/activity.css";
 
 /* Feedback */
 @import "./styles/toast.css";

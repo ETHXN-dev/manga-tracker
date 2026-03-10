@@ -18,6 +18,8 @@ import SearchBar from "./components/SearchBar";
 import SearchResultCard from "./components/SearchResultCard";
 import NotifierStatus from "./components/NotifierStatus";
 import ActivityHeatmap from "./components/ActivityHeatmap";
+import ActivityStats from "./components/ActivityStats";
+import RecentReads from "./components/RecentReads";
 import Toast from "./components/Toast";
 
 export default function App() {
@@ -283,8 +285,10 @@ export default function App() {
 
           {activeTab === "activity" && (
             <>
-              <NotifierStatus />
+              <ActivityStats />
               <ActivityHeatmap />
+              <RecentReads />
+              <NotifierStatus />
             </>
           )}
 
