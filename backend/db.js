@@ -129,6 +129,26 @@ export async function getActivityHeatmap() {
   return map;
 }
 
+// Get all ReadActivity entries for a specific UTC date, joined with manga info.
+// Deduplicates on (mangaId, chapter) so repeated progress updates don't show twice.
+export async function getActivityForDay(dateStr) {
+  const start = new Date(dateStr + "T00:00:00.000Z");
+  const end = new Date(dateStr + "T23:59:59.999Z");
+  const rows = await prisma.readActivity.findMany({
+    where: { readAt: { gte: start, lte: end } },
+    include: { manga: { select: { title: true, coverUrl: true } } },
+    orderBy: { readAt: "asc" },
+  });
+  // Deduplicate — user may have bumped the same chapter multiple times in a day
+  const seen = new Set();
+  return rows.filter(({ mangaId, chapter }) => {
+    const key = `${mangaId}:${chapter}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 // Get the most recent N read-activity entries, each with its manga's title and cover
 export async function getRecentActivity(limit = 15) {
   return prisma.readActivity.findMany({

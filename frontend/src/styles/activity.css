@@ -160,9 +160,9 @@
 }
 
 .top-manga-count {
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   font-family: var(--font-mono);
-  color: var(--text-muted);
+  color: var(--text-sub);
   white-space: nowrap;
   min-width: 3.5ch;
   text-align: right;

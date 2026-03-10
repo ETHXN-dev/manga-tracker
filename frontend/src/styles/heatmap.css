@@ -90,12 +90,25 @@
   transform: scale(1.5);
 }
 
-.heatmap-cell.level-0      { background: var(--glass-2); }
-.heatmap-cell.level-1      { background: rgba(255, 45, 45, 0.25); }
-.heatmap-cell.level-2      { background: rgba(255, 45, 45, 0.48); }
-.heatmap-cell.level-3      { background: rgba(255, 45, 45, 0.72); }
-.heatmap-cell.level-4      { background: var(--accent); box-shadow: 0 0 6px rgba(255, 45, 45, 0.6); }
-.heatmap-cell.level-future { background: transparent; }
+.heatmap-cell.level-0 {
+  background: var(--glass-2);
+}
+.heatmap-cell.level-1 {
+  background: rgba(255, 45, 45, 0.25);
+}
+.heatmap-cell.level-2 {
+  background: rgba(255, 45, 45, 0.48);
+}
+.heatmap-cell.level-3 {
+  background: rgba(255, 45, 45, 0.72);
+}
+.heatmap-cell.level-4 {
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(255, 45, 45, 0.6);
+}
+.heatmap-cell.level-future {
+  background: transparent;
+}
 
 /* ─── Legend ─────────────────────────────────────────────────────────────────── */
 
@@ -110,6 +123,154 @@
   font-size: 0.6rem;
   color: var(--text-muted);
   margin: 0 2px;
+}
+
+/* ─── Selected Cell ──────────────────────────────────────────────────────────── */
+
+.heatmap-cell.heatmap-cell-selected {
+  transform: scale(1.4);
+  outline: 1.5px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 1px;
+}
+
+.heatmap-cell.heatmap-cell-selected:hover {
+  transform: scale(1.5);
+}
+
+/* ─── Day Panel ──────────────────────────────────────────────────────────────── */
+
+.heatmap-day-panel {
+  margin-top: 1rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border-bright);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  animation: dropdownOpen 0.2s var(--ease-out) both;
+}
+
+/* ─── Day Panel Header ───────────────────────────────────────────────────────── */
+
+.hdp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.hdp-date {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+.hdp-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition:
+    background 0.15s var(--ease-out),
+    color 0.15s var(--ease-out);
+  flex-shrink: 0;
+}
+
+.hdp-close:hover {
+  background: var(--glass-2);
+  color: var(--text);
+}
+
+.hdp-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ─── Day Panel List ─────────────────────────────────────────────────────────── */
+
+.hdp-list {
+  padding: 0.4rem 0.75rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.hdp-item {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.25rem;
+  border-radius: var(--r-sm);
+  transition: background 0.15s var(--ease-out);
+}
+
+.hdp-item:hover {
+  background: var(--glass-2);
+}
+
+.hdp-cover {
+  width: 2.5rem;
+  height: 3.4rem;
+  object-fit: cover;
+  border-radius: 5px;
+  background: var(--glass-2);
+  display: block;
+  flex-shrink: 0;
+}
+
+.hdp-cover-placeholder {
+  background: var(--glass-2);
+}
+
+.hdp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.hdp-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hdp-chapter {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.hdp-empty {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 0.5rem 0.25rem;
+  margin: 0;
+}
+
+/* ─── Day Panel Skeletons ────────────────────────────────────────────────────── */
+
+.hdp-skel-title {
+  height: 0.86rem;
+  width: 58%;
+  border-radius: 4px;
+}
+
+.hdp-skel-chapter {
+  height: 0.72rem;
+  width: 22%;
+  border-radius: 4px;
 }
 
 /* ─── Tooltip ────────────────────────────────────────────────────────────────── */

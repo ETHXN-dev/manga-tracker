@@ -4,6 +4,7 @@ import {
   getSystemStatus,
   getRecentActivity,
   getActivityStats,
+  getActivityForDay,
 } from "../db.js";
 
 const router = Router();
@@ -50,6 +51,21 @@ router.get("/stats", async (_req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not fetch activity stats." });
+  }
+});
+
+// GET /api/activity/day?date=YYYY-MM-DD — returns all chapters read on a specific
+// UTC date, joined with manga title and cover, deduplicated on (mangaId, chapter)
+router.get("/day", async (req, res) => {
+  const { date } = req.query;
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ error: "date must be YYYY-MM-DD" });
+  }
+  try {
+    res.json({ data: await getActivityForDay(date) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch day activity." });
   }
 });
 

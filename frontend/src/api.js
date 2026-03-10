@@ -78,6 +78,12 @@ export async function fetchRecentActivity(limit = 15) {
   return (await res.json()).data;
 }
 
+export async function fetchDayActivity(date) {
+  const res = await apiFetch(`/activity/day?date=${encodeURIComponent(date)}`);
+  if (!res.ok) throw new Error("Could not fetch day activity");
+  return (await res.json()).data;
+}
+
 export async function fetchAllLatestChapters(mangaList) {
   const CONCURRENCY = 6;
   const map = {};
