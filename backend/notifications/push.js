@@ -1,5 +1,8 @@
 export async function sendPushNotification(updates) {
-  if (!process.env.NTFY_TOPIC) return;
+  if (!process.env.NTFY_TOPIC) {
+    console.log("[push] NTFY_TOPIC is not set — skipping push notification");
+    return;
+  }
 
   const title =
     updates.length === 1
@@ -11,7 +14,7 @@ export async function sendPushNotification(updates) {
     .join("\n");
 
   try {
-    await fetch(`https://ntfy.sh/${process.env.NTFY_TOPIC}`, {
+    const res = await fetch(`https://ntfy.sh/${process.env.NTFY_TOPIC}`, {
       method: "POST",
       headers: {
         Title: title,
@@ -21,8 +24,22 @@ export async function sendPushNotification(updates) {
       },
       body,
     });
-    console.log("[notifier] Push notification sent");
+
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "(no body)");
+      console.error(
+        `[push] ntfy.sh returned ${res.status} ${res.statusText} — topic: "${process.env.NTFY_TOPIC}" — detail: ${detail}`,
+      );
+      return;
+    }
+
+    console.log(
+      `[push] Notification sent — topic: "${process.env.NTFY_TOPIC}" — ${updates.length} update(s)`,
+    );
   } catch (err) {
-    console.error("[notifier] Push notification failed:", err.message);
+    console.error(
+      "[push] Network error sending push notification:",
+      err.message,
+    );
   }
 }
