@@ -125,6 +125,7 @@ const MangaTile = memo(function MangaTile({
                 setConfirming(true);
               }}
               title="Remove"
+              aria-label="Remove manga"
             >
               <svg
                 viewBox="0 0 24 24"

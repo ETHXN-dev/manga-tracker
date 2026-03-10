@@ -38,11 +38,29 @@ app.use((err, _req, res, _next) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
-app.listen(PORT, () =>
+const server = app.listen(PORT, () =>
   console.log(`\n🚀 Server running on http://localhost:${PORT}\n`),
 );
 
 startNotifier();
+
+// ─── Graceful shutdown ────────────────────────────────────────────────────────
+// Give in-flight requests and the notifier time to finish before exiting.
+// Render (and most container platforms) send SIGTERM before force-killing.
+function shutdown(signal) {
+  console.log(`\n[shutdown] ${signal} received — closing server…`);
+  server.close(() => {
+    console.log("[shutdown] HTTP server closed. Exiting.");
+    process.exit(0);
+  });
+  // Force-exit if the server hasn't closed within 10s
+  setTimeout(() => {
+    console.error("[shutdown] Timeout — forcing exit.");
+    process.exit(1);
+  }, 10_000).unref();
+}
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 // ─── Keep-alive ping ──────────────────────────────────────────────────────────
 // Render free tier spins down after 15min inactivity — ping ourselves every

@@ -8,6 +8,17 @@ export async function getAllTracked() {
   return prisma.manga.findMany({ orderBy: { createdAt: "desc" } });
 }
 
+// Fetch a single tracked manga by its AniList ID — use this instead of
+// getAllTracked() + .find() when you only need one record.
+export async function getTrackedById(id) {
+  return prisma.manga.findUnique({ where: { id } });
+}
+
+// Lightweight DB connectivity check for the health endpoint.
+export async function ping() {
+  await prisma.$queryRaw`SELECT 1`;
+}
+
 export async function addTracked({ id, title, coverUrl, status, year }) {
   return prisma.manga.create({
     data: {
@@ -125,6 +136,10 @@ export async function bustAllChapterCaches() {
   });
 }
 
-process.on("beforeExit", async () => {
+// Disconnect cleanly on both graceful shutdown signals and natural process exit.
+async function disconnect() {
   await prisma.$disconnect();
-});
+}
+process.on("beforeExit", disconnect);
+process.on("SIGTERM", disconnect);
+process.on("SIGINT", disconnect);

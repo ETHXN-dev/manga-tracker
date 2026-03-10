@@ -9,6 +9,9 @@ import {
   logReadActivity,
 } from "../db.js";
 
+// Prisma error code for "record not found"
+const P2025 = "P2025";
+
 const router = Router();
 
 router.get("/", async (_req, res) => {
@@ -41,6 +44,8 @@ router.delete("/:id", async (req, res) => {
     await removeTracked(req.params.id);
     res.status(204).send();
   } catch (err) {
+    if (err.code === P2025)
+      return res.status(404).json({ error: "Manga not found." });
     console.error(err);
     res.status(500).json({ error: "Could not remove manga." });
   }
@@ -48,12 +53,15 @@ router.delete("/:id", async (req, res) => {
 
 router.patch("/:id/progress", async (req, res) => {
   const { currentChapter } = req.body;
-  if (currentChapter === undefined)
-    return res.status(400).json({ error: "currentChapter required" });
+  const chapter = parseInt(currentChapter);
+  if (isNaN(chapter) || chapter < 0)
+    return res
+      .status(400)
+      .json({ error: "currentChapter must be a non-negative integer" });
   try {
-    const updated = await updateProgress(req.params.id, currentChapter);
+    const updated = await updateProgress(req.params.id, chapter);
     // Fire and forget — don't block the response
-    logReadActivity(req.params.id, currentChapter).catch(() => {});
+    logReadActivity(req.params.id, chapter).catch(() => {});
     res.json({ data: updated });
   } catch (err) {
     console.error(err);

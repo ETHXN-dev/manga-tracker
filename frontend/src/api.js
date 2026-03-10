@@ -67,12 +67,18 @@ export async function updateReadingStatusApi(id, readingStatus) {
 }
 
 export async function fetchAllLatestChapters(mangaList) {
-  const results = await Promise.allSettled(
-    mangaList.map((m) => getLatestChapter(m.id)),
-  );
+  const CONCURRENCY = 6;
   const map = {};
-  results.forEach((result, i) => {
-    map[mangaList[i].id] = result.status === "fulfilled" ? result.value : null;
-  });
+
+  for (let i = 0; i < mangaList.length; i += CONCURRENCY) {
+    const batch = mangaList.slice(i, i + CONCURRENCY);
+    const results = await Promise.allSettled(
+      batch.map((m) => getLatestChapter(m.id)),
+    );
+    results.forEach((result, j) => {
+      map[batch[j].id] = result.status === "fulfilled" ? result.value : null;
+    });
+  }
+
   return map;
 }

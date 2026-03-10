@@ -1,12 +1,21 @@
 import { Resend } from "resend";
 
+// Lazy singleton — instantiated once on first send, not at module load time.
+// This avoids issues if the module is evaluated before dotenv has run.
+let _resend = null;
+function getResendClient() {
+  if (!_resend && process.env.RESEND_API_KEY) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
+
 export async function sendEmailNotification(updates) {
-  if (!process.env.RESEND_API_KEY || !process.env.NOTIFY_EMAIL) {
+  const resend = getResendClient();
+  if (!resend || !process.env.NOTIFY_EMAIL) {
     console.log("[notifier] Email not configured — skipping send");
     return;
   }
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
 
   const rows = updates
     .map(

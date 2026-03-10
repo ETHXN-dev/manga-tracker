@@ -72,15 +72,28 @@ export default function KanjiBackground() {
     };
     draw();
 
+    // Pause animation while the tab is not visible — no point burning CPU
+    // for a background canvas the user cannot see.
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf);
+      } else {
+        draw();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
+      aria-hidden="true"
       style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}
     />
   );

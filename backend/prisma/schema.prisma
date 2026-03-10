@@ -31,6 +31,9 @@ model ReadActivity {
   manga   Manga    @relation(fields: [mangaId], references: [id], onDelete: Cascade)
   chapter Int
   readAt  DateTime @default(now())
+
+  @@index([readAt]) // used by getActivityHeatmap() date-range filter
+  @@index([mangaId]) // FK lookup — PostgreSQL does not auto-index FK columns
 }
 
 model SystemStatus {

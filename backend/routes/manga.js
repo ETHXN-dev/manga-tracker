@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { searchManga } from "../services/anilist.js";
 import { getLatestChapter } from "../services/chapters.js";
-import { getAllTracked, updateChapterCache, isCacheFresh } from "../db.js";
+import { getTrackedById, updateChapterCache, isCacheFresh } from "../db.js";
 
 const router = Router();
 
@@ -24,8 +24,7 @@ router.get("/:id/latest-chapter", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const tracked = await getAllTracked();
-    const manga = tracked.find((m) => m.id === id);
+    const manga = await getTrackedById(id);
 
     if (manga && isCacheFresh(manga)) {
       console.log(`[cache] HIT for ${manga.title}`);

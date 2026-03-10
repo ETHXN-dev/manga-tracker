@@ -7,8 +7,10 @@ export default function NowReadingTicker({ manga }) {
 
   if (titles.length === 0) return null;
 
-  const repeated = [...titles, ...titles, ...titles];
-  const text = repeated.join("  ·  ");
+  // The tickerScroll animation translates by -50%, so the element needs two
+  // identical halves. One copy of the joined titles per half is sufficient —
+  // the original code produced 6 copies (3x array, then rendered twice).
+  const text = titles.join("  ·  ");
 
   return (
     <div className="ticker-wrap">

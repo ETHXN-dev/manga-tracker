@@ -84,7 +84,11 @@ export default function Toolbar({
             <option value="behind">Most Behind</option>
             <option value="latest">Most Chapters</option>
           </select>
-          <button className="btn-add" onClick={() => setActiveTab("search")}>
+          <button
+            className="btn-add"
+            onClick={() => setActiveTab("search")}
+            aria-label="Add manga"
+          >
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -100,6 +104,9 @@ export default function Toolbar({
             className={`btn-refresh ${isRefreshing ? "spinning" : ""}`}
             onClick={onRefresh}
             title="Refresh chapters"
+            aria-label={
+              isRefreshing ? "Refreshing chapters…" : "Refresh chapters"
+            }
             disabled={isRefreshing}
           >
             <svg
