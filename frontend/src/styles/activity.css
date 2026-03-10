@@ -24,7 +24,7 @@
   gap: 0.15rem;
   transition:
     border-color 0.2s var(--ease-out),
-    background   0.2s var(--ease-out);
+    background 0.2s var(--ease-out);
 }
 
 .activity-stat-card:hover {
@@ -48,38 +48,38 @@
 /* ─── Stat Card Typography ───────────────────────────────────────────────────── */
 
 .asc-value {
-  font-family:  var(--font-display);
-  font-size:    2.4rem;
-  line-height:  1;
-  color:        var(--text);
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--text);
   letter-spacing: 0.02em;
 }
 
 .asc-label {
-  font-size:      0.64rem;
-  font-weight:    700;
+  font-size: 0.64rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.13em;
-  color:          var(--text-muted);
-  margin-top:     0.2rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
 }
 
 .asc-unit {
   font-size: 0.58rem;
-  color:     var(--text-muted);
-  opacity:   0.55;
+  color: var(--text-muted);
+  opacity: 0.55;
 }
 
 /* ─── Section Eyebrow (shared by both components) ───────────────────────────── */
 
 .section-eyebrow {
-  display:        block;
-  font-size:      0.66rem;
-  font-weight:    700;
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color:          var(--text-muted);
-  margin-bottom:  0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 0.7rem;
 }
 
 /* ─── Top Manga ──────────────────────────────────────────────────────────────── */
@@ -89,35 +89,35 @@
 }
 
 .top-manga-list {
-  display:        flex;
+  display: flex;
   flex-direction: column;
-  gap:            0.45rem;
+  gap: 0.45rem;
 }
 
 .top-manga-row {
-  display:     grid;
+  display: grid;
   grid-template-columns: 1.6rem 2rem 1fr auto auto;
   align-items: center;
-  gap:         0.65rem;
+  gap: 0.65rem;
 }
 
 .top-manga-rank {
-  font-size:   0.6rem;
+  font-size: 0.6rem;
   font-family: var(--font-mono);
-  color:       var(--text-muted);
-  text-align:  right;
-  opacity:     0.7;
+  color: var(--text-muted);
+  text-align: right;
+  opacity: 0.7;
 }
 
 /* Small thumbnail in the top-manga row */
 .top-manga-cover {
-  width:         2rem;
-  height:        2.75rem;
-  object-fit:    cover;
+  width: 2rem;
+  height: 2.75rem;
+  object-fit: cover;
   border-radius: 4px;
-  background:    var(--glass-2);
-  flex-shrink:   0;
-  display:       block;
+  background: var(--glass-2);
+  flex-shrink: 0;
+  display: block;
 }
 
 .top-manga-cover-placeholder {
@@ -125,50 +125,54 @@
 }
 
 .top-manga-title {
-  font-size:     0.78rem;
-  color:         var(--text-sub);
-  white-space:   nowrap;
-  overflow:      hidden;
+  font-size: 0.92rem;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .top-manga-bar-track {
-  width:         140px;
-  height:        4px;
-  background:    var(--glass-3);
+  width: 140px;
+  height: 4px;
+  background: var(--glass-3);
   border-radius: 2px;
-  overflow:      hidden;
+  overflow: hidden;
 }
 
 .top-manga-bar-fill {
-  height:           100%;
-  background:       var(--accent);
-  border-radius:    2px;
-  opacity:          0.65;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  opacity: 0.65;
   transform-origin: left center;
-  animation:        barGrow 0.7s var(--ease-out) both;
-  min-width:        3px;
+  animation: barGrow 0.7s var(--ease-out) both;
+  min-width: 3px;
 }
 
 @keyframes barGrow {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .top-manga-count {
-  font-size:   0.63rem;
+  font-size: 0.76rem;
   font-family: var(--font-mono);
-  color:       var(--text-muted);
+  color: var(--text-muted);
   white-space: nowrap;
-  min-width:   3.5ch;
-  text-align:  right;
+  min-width: 3.5ch;
+  text-align: right;
 }
 
 /* Skeleton for top-manga rows */
 .top-manga-skel-title {
-  height:        0.7rem;
+  height: 0.7rem;
   border-radius: 4px;
-  width:         55%;
+  width: 55%;
 }
 
 .top-manga-skel-bar {
@@ -184,15 +188,15 @@
 
 .recent-reads-empty {
   font-size: 0.78rem;
-  color:     var(--text-muted);
-  padding:   0.75rem 0;
-  margin:    0;
+  color: var(--text-muted);
+  padding: 0.75rem 0;
+  margin: 0;
 }
 
 .recent-reads-list {
-  display:        flex;
+  display: flex;
   flex-direction: column;
-  gap:            0;
+  gap: 0;
   /* slight negative horizontal margin so hover bg bleeds to edges */
   margin: 0 -0.5rem;
 }
@@ -200,13 +204,13 @@
 /* ─── Individual Read Item ───────────────────────────────────────────────────── */
 
 .recent-read-item {
-  display:     grid;
+  display: grid;
   grid-template-columns: 2.8rem 1fr auto;
   align-items: center;
-  gap:         0.875rem;
-  padding:     0.5rem 0.5rem;
+  gap: 0.875rem;
+  padding: 0.5rem 0.5rem;
   border-radius: var(--r-sm);
-  transition:  background 0.15s var(--ease-out);
+  transition: background 0.15s var(--ease-out);
 }
 
 .recent-read-item:hover {
@@ -215,13 +219,13 @@
 
 /* Cover thumbnail */
 .rri-cover {
-  width:         2.8rem;
-  height:        3.85rem;
-  object-fit:    cover;
+  width: 2.8rem;
+  height: 3.85rem;
+  object-fit: cover;
   border-radius: 6px;
-  background:    var(--glass-2);
-  flex-shrink:   0;
-  display:       block;
+  background: var(--glass-2);
+  flex-shrink: 0;
+  display: block;
 }
 
 .rri-cover-placeholder {
@@ -230,59 +234,59 @@
 
 /* Title + chapter meta */
 .rri-body {
-  display:        flex;
+  display: flex;
   flex-direction: column;
-  gap:            0.28rem;
-  overflow:       hidden;
-  min-width:      0;
+  gap: 0.28rem;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .rri-title {
-  font-size:     0.82rem;
-  font-weight:   600;
-  color:         var(--text);
-  white-space:   nowrap;
-  overflow:      hidden;
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .rri-meta {
-  font-size:   0.68rem;
+  font-size: 0.82rem;
   font-family: var(--font-mono);
-  color:       var(--text-muted);
+  color: var(--text-muted);
 }
 
 /* Time-ago label */
 .rri-time {
-  font-size:   0.63rem;
+  font-size: 0.74rem;
   font-family: var(--font-mono);
-  color:       var(--text-muted);
+  color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
-  align-self:  flex-start;
-  margin-top:  0.35rem;
+  align-self: flex-start;
+  margin-top: 0.35rem;
 }
 
 /* ─── Recent Reads Skeleton ──────────────────────────────────────────────────── */
 
 .rri-skel-title {
-  height:        0.78rem;
-  width:         62%;
+  height: 0.92rem;
+  width: 62%;
   border-radius: 4px;
 }
 
 .rri-skel-meta {
-  height:        0.65rem;
-  width:         28%;
+  height: 0.78rem;
+  width: 28%;
   border-radius: 4px;
 }
 
 .rri-skel-time {
-  width:         3.5rem;
-  height:        0.63rem;
+  width: 3.5rem;
+  height: 0.7rem;
   border-radius: 4px;
-  align-self:    flex-start;
-  margin-top:    0.35rem;
+  align-self: flex-start;
+  margin-top: 0.35rem;
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────────── */
