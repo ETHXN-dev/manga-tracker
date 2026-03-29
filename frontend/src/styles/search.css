@@ -4,13 +4,14 @@
 
 .search-bar {
   margin-bottom: 1.5rem;
-  max-width: 560px;
+  max-width: 100%;
 }
 
 .search-input-wrap {
   position: relative;
   display: flex;
   align-items: center;
+  max-width: 560px;
 }
 
 .search-icon {
@@ -69,22 +70,20 @@
   animation: spin 0.55s linear infinite;
 }
 
-/* ─── Results List ───────────────────────────────────────────────────────────── */
+/* ─── Results Grid ───────────────────────────────────────────────────────────── */
 
 .results-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 680px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
 }
 
 /* ─── Result Card ────────────────────────────────────────────────────────────── */
 
 .result-card {
   display: grid;
-  /* cover | info | action button */
-  grid-template-columns: 60px 1fr auto;
-  gap: 0;
+  grid-template-columns: 72px 1fr;
+  grid-template-rows: 1fr auto;
   align-items: stretch;
   background: var(--glass);
   border: 1px solid var(--glass-border);
@@ -100,45 +99,45 @@
   animation: fadeUp 0.3s var(--ease-out) both;
 }
 
-/* Staggered entrance */
 .result-card:nth-child(1) {
   animation-delay: 0.03s;
 }
 .result-card:nth-child(2) {
-  animation-delay: 0.07s;
+  animation-delay: 0.06s;
 }
 .result-card:nth-child(3) {
-  animation-delay: 0.11s;
+  animation-delay: 0.09s;
 }
 .result-card:nth-child(4) {
-  animation-delay: 0.15s;
+  animation-delay: 0.12s;
 }
 .result-card:nth-child(5) {
-  animation-delay: 0.19s;
+  animation-delay: 0.15s;
 }
 .result-card:nth-child(6) {
-  animation-delay: 0.23s;
+  animation-delay: 0.18s;
 }
 .result-card:nth-child(7) {
-  animation-delay: 0.27s;
+  animation-delay: 0.21s;
 }
 .result-card:nth-child(8) {
-  animation-delay: 0.31s;
+  animation-delay: 0.24s;
 }
 .result-card:nth-child(9) {
-  animation-delay: 0.35s;
+  animation-delay: 0.27s;
 }
 .result-card:nth-child(10) {
-  animation-delay: 0.39s;
+  animation-delay: 0.3s;
 }
 
 .result-card:hover {
   border-color: rgba(255, 45, 45, 0.35);
   background: var(--glass-2);
-  transform: translateX(3px);
+  transform: translateY(-3px);
   box-shadow:
-    -3px 0 0 rgba(255, 45, 45, 0.4),
-    0 4px 20px rgba(0, 0, 0, 0.3);
+    0 0 0 1px rgba(255, 45, 45, 0.15),
+    0 8px 28px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(255, 45, 45, 0.07);
 }
 
 .result-card.is-tracked {
@@ -149,13 +148,11 @@
 /* ─── Cover ──────────────────────────────────────────────────────────────────── */
 
 .result-cover {
-  width: 60px;
-  /* Tall enough to be interesting but not overwhelming */
-  min-height: 82px;
+  grid-row: 1 / -1;
+  width: 72px;
   position: relative;
   overflow: hidden;
   background: var(--glass-3);
-  flex-shrink: 0;
   border-right: 1px solid var(--glass-border);
 }
 
@@ -171,18 +168,17 @@
   transform: scale(1.07);
 }
 
-/* Subtle right-side gradient blending cover into card body */
 .result-cover-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent 60%, rgba(0, 0, 0, 0.3) 100%);
+  background: linear-gradient(90deg, transparent 50%, rgba(0, 0, 0, 0.25) 100%);
   pointer-events: none;
 }
 
 .cover-placeholder {
   width: 100%;
   height: 100%;
-  min-height: 82px;
+  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,36 +186,35 @@
 }
 
 .cover-placeholder svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   color: var(--text-muted);
-  opacity: 0.4;
+  opacity: 0.35;
 }
 
 /* ─── Info ───────────────────────────────────────────────────────────────────── */
 
 .result-info {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.875rem 0.5rem;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.4rem;
+  justify-content: flex-start;
+  gap: 0.35rem;
 }
 
 .result-title {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   line-height: 1.35;
   color: var(--text);
-  /* Let it wrap up to 2 lines so short-title manga don't look odd */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* ─── Meta Pills Row ─────────────────────────────────────────────────────────── */
+/* ─── Meta Pills ─────────────────────────────────────────────────────────────── */
 
 .result-meta {
   display: flex;
@@ -228,9 +223,8 @@
   flex-wrap: wrap;
 }
 
-/* Generic small pill */
 .result-pill {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
   font-family: var(--font-mono);
   letter-spacing: 0.06em;
@@ -277,7 +271,7 @@
   border-color: rgba(255, 45, 45, 0.2);
 }
 
-/* ─── Description snippet ────────────────────────────────────────────────────── */
+/* ─── Description ────────────────────────────────────────────────────────────── */
 
 .result-description {
   font-size: 0.72rem;
@@ -287,18 +281,15 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-top: 0.1rem;
 }
 
-/* ─── Action Column ──────────────────────────────────────────────────────────── */
+/* ─── Action Row (bottom of card) ────────────────────────────────────────────── */
 
 .result-action {
+  padding: 0 0.875rem 0.75rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0 1rem;
-  border-left: 1px solid var(--glass-border);
-  flex-shrink: 0;
+  justify-content: flex-end;
 }
 
 /* ─── Track Button ───────────────────────────────────────────────────────────── */
@@ -309,11 +300,11 @@
   gap: 6px;
   background: linear-gradient(135deg, var(--accent), #ff5050);
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  padding: 8px 14px;
+  padding: 7px 16px;
   border-radius: var(--r-sm);
   white-space: nowrap;
   flex-shrink: 0;
@@ -345,7 +336,6 @@
   transform: scale(0.96);
 }
 
-/* Tracked state */
 .track-btn.tracked,
 .track-btn:disabled {
   background: rgba(57, 224, 122, 0.08);
@@ -355,9 +345,58 @@
   box-shadow: none;
   transform: none;
   filter: none;
-  padding: 7px 14px;
+  padding: 6px 16px;
 }
 
 .track-btn.tracked svg {
   stroke: var(--green);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .results-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .result-cover {
+    width: 56px;
+  }
+  .result-info {
+    padding: 0.6rem 0.75rem 0.4rem;
+  }
+  .result-action {
+    padding: 0 0.75rem 0.6rem;
+  }
+  .result-description {
+    display: none;
+  }
+  .track-btn {
+    font-size: 0.62rem;
+    padding: 6px 12px;
+  }
+
+  /* ─── Search responsive fixes ────────────────────────────────────────────────── */
+
+  /* Prevent the minmax from overflowing narrow containers */
+  @media (max-width: 640px) {
+    .results-list {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Let the search input match the grid width on wide screens */
+  .search-input-wrap {
+    max-width: 100%;
+  }
+
+  /* Wide screens — allow up to 3 columns */
+  @media (min-width: 1400px) {
+    .results-list {
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    }
+  }
 }
