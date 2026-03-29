@@ -1,14 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  searchManga,
-  fetchTracked,
-  addTrackedApi,
-  removeTrackedApi,
-  getLatestChapter,
-  updateProgressApi,
-  fetchAllLatestChapters,
-} from "./api";
+import { useState, useEffect, useCallback } from "react";
+import { searchManga } from "./api";
 import { useDebounce } from "./hooks/useDebounce";
+import { useTrackedManga } from "./hooks/useTrackedManga";
 import KanjiBackground from "./components/KanjiBackground";
 import Header from "./components/Header";
 import NowReadingTicker from "./components/NowReadingTicker";
@@ -23,50 +16,55 @@ import RecentReads from "./components/RecentReads";
 import Toast from "./components/Toast";
 
 export default function App() {
-  const [query, setQuery] = useState("");
-  const [searchResults, setResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState(null);
+  // ── UI state ──────────────────────────────────────────────────────────────────
 
   const [activeTab, setActiveTab] = useState("reading");
-
-  const [trackedManga, setTracked] = useState([]);
-  const [listLoading, setListLoading] = useState(true);
-  const [listError, setListError] = useState(null);
-  const [chapterMap, setChapterMap] = useState({});
-  const [cachedCount, setCachedCount] = useState(() =>
-    parseInt(localStorage.getItem("mangalog_count") || "6"),
-  );
-
   const [listQuery, setListQuery] = useState("");
   const [sortBy, setSortBy] = useState("added");
   const [toast, setToast] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [recentlyAdded, setRecentlyAdded] = useState(null);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  // ── Toast helper ──────────────────────────────────────────────────────────────
 
   const showToast = useCallback(
     (msg, type = "error") => setToast({ msg, type }),
     [],
   );
 
-  // ── Data loading ───────────────────────────────────────────────────────────
+  // ── Tracked manga (all state + handlers live in the hook) ─────────────────────
 
-  useEffect(() => {
-    fetchTracked()
-      .then(async (list) => {
-        setTracked(list);
-        setCachedCount(list.length);
-        localStorage.setItem("mangalog_count", String(list.length));
-        const map = await fetchAllLatestChapters(list);
-        setChapterMap(map);
-      })
-      .catch((e) => setListError(e.message))
-      .finally(() => setListLoading(false));
-  }, []);
+  const {
+    trackedManga,
+    chapterMap,
+    listLoading,
+    listError,
+    isRefreshing,
+    recentlyAdded,
+    cachedCount,
+    trackedIds,
+    reading,
+    completed,
+    handleAdd,
+    handleRemove,
+    handleRefresh,
+    handleProgressUpdate,
+    handleStatusChange,
+  } = useTrackedManga({ listQuery, sortBy, onToast: showToast });
 
-  // ── Search ─────────────────────────────────────────────────────────────────
+  // Switch to reading tab after adding so the user sees their new manga
+  const handleAddAndSwitch = useCallback(
+    async (manga) => {
+      await handleAdd(manga);
+      setActiveTab("reading");
+    },
+    [handleAdd],
+  );
+
+  // ── Search ────────────────────────────────────────────────────────────────────
+
+  const [query, setQuery] = useState("");
+  const [searchResults, setResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState(null);
 
   const debouncedQuery = useDebounce(query, 500);
 
@@ -91,130 +89,7 @@ export default function App() {
     performSearch(debouncedQuery);
   }, [debouncedQuery, performSearch]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
-
-  const handleRefresh = useCallback(async () => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
-    try {
-      const list = await fetchTracked();
-      setTracked(list);
-      const map = await fetchAllLatestChapters(list);
-      setChapterMap(map);
-      showToast("Chapters refreshed", "success");
-    } catch {
-      showToast("Refresh failed");
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [isRefreshing, showToast]);
-
-  const handleAdd = useCallback(
-    async (manga) => {
-      try {
-        await addTrackedApi(manga);
-        setTracked((p) => [{ ...manga, readingStatus: "reading" }, ...p]);
-        setRecentlyAdded(manga.id);
-        setTimeout(() => setRecentlyAdded(null), 2000);
-        setActiveTab("reading");
-        showToast(`"${manga.title}" added`, "success");
-        getLatestChapter(manga.id).then(async (ch) => {
-          if (ch) {
-            setChapterMap((prev) => ({ ...prev, [manga.id]: ch }));
-            await updateProgressApi(manga.id, ch.chapter);
-          }
-        });
-      } catch (e) {
-        showToast(e.message || "Could not add manga");
-      }
-    },
-    [showToast],
-  );
-
-  const handleRemove = useCallback(
-    async (id) => {
-      const prev = trackedManga;
-      setTracked((p) => p.filter((m) => m.id !== id)); // optimistic
-      try {
-        await removeTrackedApi(id);
-      } catch {
-        setTracked(prev); // rollback
-      }
-    },
-    [trackedManga],
-  );
-
-  const handleProgressUpdate = useCallback((id, currentChapter) => {
-    setTracked((p) =>
-      p.map((m) => (m.id === id ? { ...m, currentChapter } : m)),
-    );
-  }, []);
-
-  const handleStatusChange = useCallback((id, readingStatus) => {
-    setTracked((p) =>
-      p.map((m) => (m.id === id ? { ...m, readingStatus } : m)),
-    );
-  }, []);
-
-  // ── Derived state ──────────────────────────────────────────────────────────
-
-  const trackedIds = useMemo(
-    () => new Set(trackedManga.map((m) => m.id)),
-    [trackedManga],
-  );
-
-  const { reading, completed } = useMemo(() => {
-    const applySort = (list) => {
-      let result = !listQuery.trim()
-        ? list
-        : list.filter((m) =>
-            m.title.toLowerCase().includes(listQuery.toLowerCase().trim()),
-          );
-
-      switch (sortBy) {
-        case "alpha":
-          return [...result].sort((a, b) => a.title.localeCompare(b.title));
-        case "behind":
-          return [...result].sort((a, b) => {
-            const aGap =
-              (chapterMap[a.id]?.chapter || 0) - (a.currentChapter || 0);
-            const bGap =
-              (chapterMap[b.id]?.chapter || 0) - (b.currentChapter || 0);
-            return bGap - aGap;
-          });
-        case "latest":
-          return [...result].sort(
-            (a, b) =>
-              (chapterMap[b.id]?.chapter || 0) -
-              (chapterMap[a.id]?.chapter || 0),
-          );
-        default:
-          return [...result].sort((a, b) => {
-            const aUnread =
-              (chapterMap[a.id]?.chapter || 0) > (a.currentChapter || 0)
-                ? 1
-                : 0;
-            const bUnread =
-              (chapterMap[b.id]?.chapter || 0) > (b.currentChapter || 0)
-                ? 1
-                : 0;
-            if (bUnread !== aUnread) return bUnread - aUnread;
-            return a.title.localeCompare(b.title);
-          });
-      }
-    };
-
-    return {
-      reading: applySort(
-        trackedManga.filter((m) => m.readingStatus !== "completed"),
-      ),
-      completed: applySort(
-        trackedManga.filter((m) => m.readingStatus === "completed"),
-      ),
-    };
-  }, [trackedManga, chapterMap, listQuery, sortBy]);
-
-  // ── Shared grid props ──────────────────────────────────────────────────────
+  // ── Shared grid props ─────────────────────────────────────────────────────────
 
   const sharedGridProps = {
     listLoading,
@@ -227,7 +102,7 @@ export default function App() {
     onSwitchToSearch: () => setActiveTab("search"),
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <div className="app" style={{ position: "relative", zIndex: 1 }}>
@@ -306,7 +181,7 @@ export default function App() {
                     <SearchResultCard
                       key={m.id}
                       manga={m}
-                      onAdd={handleAdd}
+                      onAdd={handleAddAndSwitch}
                       isTracked={trackedIds.has(m.id)}
                     />
                   ))}
