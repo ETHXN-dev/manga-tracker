@@ -35,6 +35,7 @@
 
 /* ─── General improvements (new) ────────────────────────────────────────────── */
 @import "./styles/general-improvements.css";
+@import "./styles/manga-detail-panel.css";
 
 /* Responsive overrides (must be last) */
 @import "./styles/responsive.css";

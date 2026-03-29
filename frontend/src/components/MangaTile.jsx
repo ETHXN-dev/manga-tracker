@@ -8,6 +8,7 @@ const MangaTile = memo(function MangaTile({
   onRemove,
   onProgressUpdate,
   onStatusChange,
+  onOpenDetail,
   justAdded,
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -17,12 +18,21 @@ const MangaTile = memo(function MangaTile({
   const isCompleted = manga.readingStatus === "completed";
   const wrapRef = useRef(null);
   const longPressTimer = useRef(null);
+  const touchMoved = useRef(false);
 
-  // Long-press to trigger delete on touch devices
   const handleTouchStart = useCallback(() => {
-    longPressTimer.current = setTimeout(() => setConfirming(true), 600);
+    touchMoved.current = false;
+    longPressTimer.current = setTimeout(() => {
+      if (!touchMoved.current) setConfirming(true);
+    }, 600);
   }, []);
+
   const handleTouchEnd = useCallback(() => {
+    clearTimeout(longPressTimer.current);
+  }, []);
+
+  const handleTouchMove = useCallback(() => {
+    touchMoved.current = true;
     clearTimeout(longPressTimer.current);
   }, []);
 
@@ -31,7 +41,6 @@ const MangaTile = memo(function MangaTile({
     !isCompleted && !isNaN(latest) && latest > currentCh && currentCh > 0;
   const isNew = !isCompleted && currentCh === 0 && latest > 0;
 
-  // Badge label for cover
   let statusBadgeClass = "";
   let statusBadgeLabel = "";
   if (isCompleted) {
@@ -48,13 +57,13 @@ const MangaTile = memo(function MangaTile({
   const markAsRead = async () => {
     if (!chapter || savingProgress) return;
     const prev = currentCh;
-    setCurrentCh(latest); // optimistic
+    setCurrentCh(latest);
     onProgressUpdate(manga.id, latest);
     setSaving(true);
     try {
       await updateProgressApi(manga.id, latest);
     } catch {
-      setCurrentCh(prev); // rollback
+      setCurrentCh(prev);
       onProgressUpdate(manga.id, prev);
     } finally {
       setSaving(false);
@@ -64,16 +73,27 @@ const MangaTile = memo(function MangaTile({
   const toggleStatus = async () => {
     if (savingStatus) return;
     const newStatus = isCompleted ? "reading" : "completed";
-    onStatusChange(manga.id, newStatus); // optimistic
+    onStatusChange(manga.id, newStatus);
     setSavingStatus(true);
     try {
       await updateReadingStatusApi(manga.id, newStatus);
     } catch {
-      onStatusChange(manga.id, isCompleted ? "completed" : "reading"); // rollback
+      onStatusChange(manga.id, isCompleted ? "completed" : "reading");
     } finally {
       setSavingStatus(false);
     }
   };
+
+  // Open detail panel on tile click — but not if clicking an action button
+  const handleTileClick = useCallback(
+    (e) => {
+      if (confirming) return;
+      // Ignore clicks on interactive elements inside the tile
+      if (e.target.closest("a, button, .chapter-picker")) return;
+      onOpenDetail?.(manga, chapter);
+    },
+    [confirming, manga, chapter, onOpenDetail],
+  );
 
   return (
     <div
@@ -82,12 +102,13 @@ const MangaTile = memo(function MangaTile({
       onMouseLeave={() => setConfirming(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      onTouchMove={handleTouchEnd}
+      onTouchMove={handleTouchMove}
+      onClick={handleTileClick}
+      style={{ cursor: "pointer" }}
     >
       <div className="tile-flip-inner">
         {/* ── FRONT ── */}
         <div className="manga-tile tile-front">
-          {/* Cover */}
           <div className="tile-cover">
             {manga.coverUrl ? (
               <img
@@ -117,7 +138,6 @@ const MangaTile = memo(function MangaTile({
               <div className="tile-unread-badge">+{latest - currentCh}</div>
             )}
 
-            {/* Delete button — shown on hover */}
             <button
               className="tile-delete-btn"
               onClick={(e) => {
@@ -142,7 +162,6 @@ const MangaTile = memo(function MangaTile({
             </button>
           </div>
 
-          {/* Card body */}
           <div className="tile-info">
             <p className="tile-title">{manga.title}</p>
 
@@ -167,7 +186,6 @@ const MangaTile = memo(function MangaTile({
 
             {chapter && chapter.chapter !== "?" && (
               <>
-                {/* Read Now + Chapter toggle buttons */}
                 <div className="card-actions">
                   <a
                     className="btn-read"
@@ -188,7 +206,6 @@ const MangaTile = memo(function MangaTile({
                     </svg>
                     Read Now
                   </a>
-
                   <ChapterDropdownToggle
                     latestChapter={chapter.chapter}
                     readUrl={chapter.readUrl}
@@ -203,7 +220,10 @@ const MangaTile = memo(function MangaTile({
                     )}
                     <button
                       className="mark-read-btn"
-                      onClick={markAsRead}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        markAsRead();
+                      }}
                       disabled={savingProgress}
                     >
                       {savingProgress ? "Saving…" : `Mark ch. ${latest} read`}
@@ -214,7 +234,10 @@ const MangaTile = memo(function MangaTile({
                 {(isCompleted || manga.status === "finished") && (
                   <button
                     className="status-toggle-btn"
-                    onClick={toggleStatus}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleStatus();
+                    }}
                     disabled={savingStatus}
                   >
                     {savingStatus

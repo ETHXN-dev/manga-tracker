@@ -14,6 +14,7 @@ export default function MangaGrid({
   onRemove,
   onProgressUpdate,
   onStatusChange,
+  onOpenDetail,
   onSwitchToSearch,
 }) {
   if (listLoading) {
@@ -51,6 +52,7 @@ export default function MangaGrid({
           onRemove={onRemove}
           onProgressUpdate={onProgressUpdate}
           onStatusChange={onStatusChange}
+          onOpenDetail={onOpenDetail}
           justAdded={m.id === recentlyAddedId}
         />
       ))}

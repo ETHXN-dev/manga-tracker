@@ -5,6 +5,7 @@ import {
   getRecentActivity,
   getActivityStats,
   getActivityForDay,
+  getMangaActivity,
 } from "../db.js";
 
 const router = Router();
@@ -31,7 +32,6 @@ router.get("/status", async (_req, res) => {
 });
 
 // GET /api/activity/recent?limit=15 — returns the most recent read-activity entries
-// with each entry's manga title and cover URL included
 router.get("/recent", async (req, res) => {
   try {
     const raw = parseInt(req.query.limit);
@@ -43,8 +43,7 @@ router.get("/recent", async (req, res) => {
   }
 });
 
-// GET /api/activity/stats — returns reading totals (week/month/all-time),
-// current day streak, and top-5 manga by chapters read
+// GET /api/activity/stats — reading totals, streak, top manga
 router.get("/stats", async (_req, res) => {
   try {
     res.json({ data: await getActivityStats() });
@@ -54,8 +53,7 @@ router.get("/stats", async (_req, res) => {
   }
 });
 
-// GET /api/activity/day?date=YYYY-MM-DD — returns all chapters read on a specific
-// UTC date, joined with manga title and cover, deduplicated on (mangaId, chapter)
+// GET /api/activity/day?date=YYYY-MM-DD — chapters read on a specific day
 router.get("/day", async (req, res) => {
   const { date } = req.query;
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -66,6 +64,17 @@ router.get("/day", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not fetch day activity." });
+  }
+});
+
+// GET /api/activity/manga/:id — full reading history for a single manga
+// Used by the manga detail panel.
+router.get("/manga/:id", async (req, res) => {
+  try {
+    res.json({ data: await getMangaActivity(req.params.id) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch manga activity." });
   }
 });
 

@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import NowReadingTicker from "./components/NowReadingTicker";
 import Toolbar from "./components/Toolbar";
 import MangaGrid from "./components/MangaGrid";
+import MangaDetailPanel from "./components/MangaDetailPanel";
 import SearchBar from "./components/SearchBar";
 import SearchResultCard from "./components/SearchResultCard";
 import NotifierStatus from "./components/NotifierStatus";
@@ -23,6 +24,21 @@ export default function App() {
   const [sortBy, setSortBy] = useState("added");
   const [toast, setToast] = useState(null);
 
+  // ── Detail panel state ────────────────────────────────────────────────────────
+
+  const [detailManga, setDetailManga] = useState(null);
+  const [detailChapter, setDetailChapter] = useState(null);
+
+  const handleOpenDetail = useCallback((manga, chapter) => {
+    setDetailManga(manga);
+    setDetailChapter(chapter);
+  }, []);
+
+  const handleCloseDetail = useCallback(() => {
+    setDetailManga(null);
+    setDetailChapter(null);
+  }, []);
+
   // ── Toast helper ──────────────────────────────────────────────────────────────
 
   const showToast = useCallback(
@@ -30,7 +46,7 @@ export default function App() {
     [],
   );
 
-  // ── Tracked manga (all state + handlers live in the hook) ─────────────────────
+  // ── Tracked manga ─────────────────────────────────────────────────────────────
 
   const {
     trackedManga,
@@ -50,7 +66,6 @@ export default function App() {
     handleStatusChange,
   } = useTrackedManga({ listQuery, sortBy, onToast: showToast });
 
-  // Switch to reading tab after adding so the user sees their new manga
   const handleAddAndSwitch = useCallback(
     async (manga) => {
       await handleAdd(manga);
@@ -58,6 +73,13 @@ export default function App() {
     },
     [handleAdd],
   );
+
+  // Keep detail panel in sync if progress/status changes while open
+  useEffect(() => {
+    if (!detailManga) return;
+    const updated = trackedManga.find((m) => m.id === detailManga.id);
+    if (updated) setDetailManga(updated);
+  }, [trackedManga, detailManga?.id]);
 
   // ── Search ────────────────────────────────────────────────────────────────────
 
@@ -99,6 +121,7 @@ export default function App() {
     onRemove: handleRemove,
     onProgressUpdate: handleProgressUpdate,
     onStatusChange: handleStatusChange,
+    onOpenDetail: handleOpenDetail,
     onSwitchToSearch: () => setActiveTab("search"),
   };
 
@@ -117,7 +140,6 @@ export default function App() {
       )}
 
       <Header />
-
       <NowReadingTicker manga={trackedManga} />
 
       <Toolbar
@@ -197,6 +219,14 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {detailManga && (
+        <MangaDetailPanel
+          manga={detailManga}
+          chapter={detailChapter}
+          onClose={handleCloseDetail}
+        />
+      )}
     </div>
   );
 }

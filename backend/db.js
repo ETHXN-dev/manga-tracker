@@ -240,6 +240,20 @@ export async function bustAllChapterCaches() {
   });
 }
 
+// Get all ReadActivity entries for a specific manga, ordered newest first.
+// Used by the manga detail panel to show personal reading history.
+export async function getMangaActivity(mangaId) {
+  return prisma.readActivity.findMany({
+    where: { mangaId },
+    orderBy: { readAt: "desc" },
+    select: {
+      id: true,
+      chapter: true,
+      readAt: true,
+    },
+  });
+}
+
 // Disconnect cleanly on both graceful shutdown signals and natural process exit.
 async function disconnect() {
   await prisma.$disconnect();

@@ -14,17 +14,31 @@ export async function anilistRequest(query, variables) {
 
 export function parseManga(raw) {
   const title = raw.title.english || raw.title.romaji || "Unknown Title";
-  const description = raw.description
-    ? raw.description.replace(/<[^>]*>/g, "").slice(0, 200)
+  // Full description for the detail panel — strip HTML tags but don't truncate
+  const descriptionFull = raw.description
+    ? raw.description
+        .replace(/<[^>]*>/g, "")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .trim()
     : "";
+  // Short version for any legacy uses
+  const description = descriptionFull.slice(0, 200);
+
   return {
     id: String(raw.id),
     title,
     description,
+    descriptionFull,
     status: raw.status?.toLowerCase().replace("_", " ") || "unknown",
     coverUrl: raw.coverImage?.large || null,
+    bannerUrl: raw.bannerImage || null,
     year: raw.startDate?.year || null,
     chapters: raw.chapters || null,
+    genres: raw.genres || [],
+    averageScore: raw.averageScore || null, // out of 100
+    popularity: raw.popularity || null,
     anilistUrl: raw.siteUrl || null,
   };
 }
@@ -39,7 +53,11 @@ export async function searchManga(query) {
           description(asHtml: false)
           status
           chapters
+          genres
+          averageScore
+          popularity
           coverImage { large }
+          bannerImage
           startDate { year }
           siteUrl
         }
