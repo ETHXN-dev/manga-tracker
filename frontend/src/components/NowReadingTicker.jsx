@@ -1,25 +1,27 @@
 export default function NowReadingTicker({ manga }) {
   if (!manga || manga.length === 0) return null;
 
-  const titles = manga
-    .filter((m) => m.readingStatus !== "completed")
-    .map((m) => m.title.toUpperCase());
+  const active = manga.filter((m) => m.readingStatus !== "completed");
+  if (active.length === 0) return null;
 
-  if (titles.length === 0) return null;
-
-  // The tickerScroll animation translates by -50%, so the element needs two
-  // identical halves. One copy of the joined titles per half is sufficient —
-  // the original code produced 6 copies (3x array, then rendered twice).
-  const text = titles.join("  ·  ");
+  // Build individual title spans so we can style separators distinctly
+  const text = active.map((m) => m.title.toUpperCase()).join("  ·  ");
 
   return (
-    <div className="ticker-wrap">
-      <div className="ticker-label">NOW READING</div>
+    <div className="ticker-wrap" aria-hidden="true">
+      <div className="ticker-label">
+        <span className="ticker-dot" />
+        NOW READING
+      </div>
       <div className="ticker-track">
+        {/* Two identical spans — the animation translates by -50% so the
+            transition is seamless at the loop point. */}
         <span className="ticker-content">
-          {text}&nbsp;&nbsp;&nbsp;{text}
+          {text}&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;{text}
+          &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;
         </span>
       </div>
+      <div className="ticker-count">{active.length}</div>
     </div>
   );
 }

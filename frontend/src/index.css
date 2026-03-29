@@ -33,5 +33,8 @@
 /* Utilities */
 @import "./styles/focus.css";
 
+/* ─── General improvements (new) ────────────────────────────────────────────── */
+@import "./styles/general-improvements.css";
+
 /* Responsive overrides (must be last) */
 @import "./styles/responsive.css";

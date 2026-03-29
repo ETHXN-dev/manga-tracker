@@ -1,0 +1,241 @@
+/*
+ * general-improvements.css
+ *
+ * Drop-in improvements for MangaLog. These override or supplement
+ * the existing split CSS files. Best placed as a final @import in
+ * index.css, right before responsive.css.
+ *
+ * Improvements cover:
+ *   1.  Toolbar — tighter visual hierarchy, pill refinements
+ *   2.  Manga tile — better info-area density, subtitle readability
+ *   3.  Activity tab — section spacing tightening
+ *   4.  Heatmap — day panel tweaks
+ *   5.  Toast — slightly more polished appearance
+ *   6.  Global scrollbar styling
+ *   7.  Empty state — better illustration
+ *   8.  Header — subtle scan-line noise texture for depth
+ */
+
+/* ═══════════════════════════════════════════════════════════════
+   1.  TOOLBAR
+═══════════════════════════════════════════════════════════════ */
+
+/* Add a very subtle bottom border gradient to ground the toolbar */
+.toolbar {
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 14px;
+}
+
+/* Active tab: tighten letter-spacing slightly so it feels more precise */
+.tab.active {
+  letter-spacing: 0.05em;
+}
+
+/* Give the sort select a slightly more visible caret */
+.sort-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffff55'/%3E%3C/svg%3E");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   2.  MANGA TILE
+═══════════════════════════════════════════════════════════════ */
+
+/* Ensure the info area doesn't bloat with empty space */
+.tile-info {
+  gap: 8px;
+}
+
+/* Title: tighten line clamp to 1 on smaller tiles, let it breathe on hover */
+.tile-title {
+  -webkit-line-clamp: 2;
+}
+
+/* Mark Read button: slightly warmer background on idle */
+.mark-read-btn {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3.  CARD ADD BUTTON
+═══════════════════════════════════════════════════════════════ */
+
+/* Match the tile-cover aspect ratio so it aligns in the grid */
+.card-add {
+  min-height: unset;
+  aspect-ratio: unset; /* let it stretch to match sibling tiles */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   4.  ACTIVITY TAB — general spacing
+═══════════════════════════════════════════════════════════════ */
+
+/* Add a thin top separator above the activity stats */
+.activity-stats-wrap {
+  padding-top: 4px;
+}
+
+/* More breathing room between sections */
+.recent-reads-wrap {
+  margin-bottom: 2rem;
+}
+
+/* Section eyebrow: sharper */
+.section-eyebrow {
+  font-size: 0.62rem;
+  letter-spacing: 0.17em;
+  color: rgba(240, 237, 232, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   5.  HEATMAP — day panel
+═══════════════════════════════════════════════════════════════ */
+
+/* Panel gets a left accent stripe */
+.heatmap-day-panel {
+  border-left: 3px solid rgba(255, 45, 45, 0.5);
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   6.  TOAST — more polished
+═══════════════════════════════════════════════════════════════ */
+
+.toast {
+  /* Move a little higher — 28px sits almost on mobile system UI */
+  bottom: 36px;
+  /* Slightly wider max to accommodate longer messages */
+  max-width: 340px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.45;
+  justify-content: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   7.  GLOBAL SCROLLBAR
+═══════════════════════════════════════════════════════════════ */
+
+/* Chromium-based: thin dark scrollbar matching the dark theme */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   8.  EMPTY STATE — more personality
+═══════════════════════════════════════════════════════════════ */
+
+.empty-state {
+  padding: 5rem 2rem;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 0 20px rgba(255, 45, 45, 0.2));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   9.  HEADER — scan-line depth texture
+═══════════════════════════════════════════════════════════════ */
+
+/* Very subtle repeating-linear scan lines — adds texture without noise */
+.header {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 3px
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   10.  SEARCH — empty-state nudge
+═══════════════════════════════════════════════════════════════ */
+
+/* Give the "no results" message a bit more visual weight */
+.no-results {
+  padding: 3rem 0;
+  font-size: 0.9rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   11.  SKELETON — slightly more contrast
+═══════════════════════════════════════════════════════════════ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   12.  STAT PILL — hide on the toolbar (it already shows in header area)
+        Only show it inside the toolbar at wide viewports
+═══════════════════════════════════════════════════════════════ */
+
+/* The stat pill inside the toolbar is redundant on most viewports;
+   keep it but make it slightly smaller */
+.toolbar .stat-pill {
+  font-size: 0.62rem;
+  padding: 4px 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   13.  RESULT CARDS — responsive cover on narrow screens
+═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  .result-card {
+    grid-template-columns: 50px 1fr auto;
+  }
+
+  .result-cover {
+    width: 50px;
+    min-height: 70px;
+  }
+
+  .result-info {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .result-action {
+    padding: 0 0.6rem;
+  }
+
+  .track-btn {
+    padding: 7px 10px;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+  }
+
+  /* Hide description on mobile — too tight */
+  .result-description {
+    display: none;
+  }
+}
